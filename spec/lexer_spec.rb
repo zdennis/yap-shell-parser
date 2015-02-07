@@ -142,4 +142,40 @@ describe Yap::Line::Lexer do
       end
     end
   end
+
+  context "statements" do
+    ["foo;baz", "foo; baz", "foo ;baz", "foo ; baz", "foo     ;    baz"].each do |src|
+      describe "are separated by a semi-colon: #{src.inspect}" do
+        let(:str){ "foo ; baz"}
+        it { should eq [
+          [:Command, t("foo", lineno:0)],
+          [:Terminator, t(";", lineno:0)],
+          [:Command, t("baz", lineno:0)]
+        ]}
+      end
+    end
+
+    ["foo&&baz", "foo&& baz", "foo &&baz", "foo && baz", "foo     &&    baz"].each do |src|
+      describe "are separated by double ampersands: #{src.inspect}" do
+        let(:str){ "foo && baz"}
+        it { should eq [
+          [:Command, t("foo", lineno:0)],
+          [:ConditionalTerminator, t("&&", lineno:0)],
+          [:Command, t("baz", lineno:0)]
+        ]}
+      end
+    end
+
+    ["foo||baz", "foo|| baz", "foo ||baz", "foo || baz", "foo     ||    baz"].each do |src|
+      describe "are separated by double ampersands: #{src.inspect}" do
+        let(:str){ "foo || baz"}
+        it { should eq [
+          [:Command, t("foo", lineno:0)],
+          [:ConditionalTerminator, t("||", lineno:0)],
+          [:Command, t("baz", lineno:0)]
+        ]}
+      end
+    end
+  end
+
 end

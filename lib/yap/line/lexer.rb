@@ -33,9 +33,11 @@ module Yap
         end
       end
 
-      COMMAND      = /\A([A-Za-z_]+[A-Za-z_0-9]*)/
-      WHITESPACE   = /\A[^\n\S]+/
-      ARGUMENT     = /\A([\S]+)/
+      COMMAND                = /\A([A-Za-z_]+[A-Za-z_0-9]*)/
+      WHITESPACE             = /\A[^\n\S]+/
+      ARGUMENT               = /\A([\S]+)/
+      TERMINATOR             = /\A(;)/
+      CONDITIONAL_TERMINATOR =/\A(&&|\|\|)/
 
       def tokenize(str)
         @str = str
@@ -51,8 +53,10 @@ module Yap
         while process_next_chunk.call
           result = command_token ||
             whitespace_token ||
+            terminator_token ||
             string_argument_token ||
-            argument_token
+            argument_token ||
+
 
           count += 1
           raise "Infinite loop detected on #{@chunk.inspect}" if count == max
@@ -87,6 +91,18 @@ module Yap
       def argument_token
         if @looking_for_args && md=@chunk.match(ARGUMENT)
           token :Argument, md[0]
+          md[0].length
+        end
+      end
+
+      def terminator_token
+        if md=@chunk.match(TERMINATOR)
+          @looking_for_args = false
+          token :Terminator, md[0]
+          md[0].length
+        elsif md=@chunk.match(CONDITIONAL_TERMINATOR)
+          @looking_for_args = false
+          token :ConditionalTerminator, md[0]
           md[0].length
         end
       end
