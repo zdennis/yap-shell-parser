@@ -6,26 +6,27 @@ module Yap
       class Token
         include Comparable
 
-        attr_reader :tag, :lineno, :attrs
+        attr_reader :tag, :value, :lineno, :attrs
 
-        def initialize(tag, lineno:,attrs:{})
+        def initialize(tag, value, lineno:,attrs:{})
           @tag = tag
+          @value = value
           @lineno = lineno
           @attrs = @attrs
         end
 
         def <=>(other)
           return -1 if self.class != other.class
-          return 0 if [tag, lineno, attrs] == [other.tag, other.lineno, other.attrs]
+          return 0 if [value, lineno, attrs] == [other.value, other.lineno, other.attrs]
           -1
         end
 
         def inspect
-          "'#{tag}'"
+          "#{tag.inspect} '#{value}'"
         end
 
         def to_s
-          green("Token(#{tag.inspect} on #{lineno})")
+          green("Token(#{tag.inspect} #{value.inspect} on #{lineno})")
         end
 
         def length
@@ -71,7 +72,7 @@ module Yap
       private
 
       def token(tag, value, attrs:{})
-        @tokens.push [tag, Token.new(value, lineno:@lineno, attrs:attrs)]
+        @tokens.push Token.new(tag, value, lineno:@lineno, attrs:attrs)
       end
 
       def command_token
@@ -163,5 +164,5 @@ module Yap
       end
 
     end #end Lexer
-  end #end Parser
+  end #end Line
 end #end Yap
