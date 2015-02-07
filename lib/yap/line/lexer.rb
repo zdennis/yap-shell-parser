@@ -38,7 +38,7 @@ module Yap
       ARGUMENT               = /\A([\S]+)/
       TERMINATOR             = /\A(;)/
       CONDITIONAL_TERMINATOR = /\A(&&|\|\|)/
-      HEREDOC_START          = /\A<<[A-z0-9]+/
+      HEREDOC_START          = /\A<<([A-z0-9]+)/
 
       def tokenize(str)
         @str = str
@@ -84,7 +84,7 @@ module Yap
 
       def heredoc_token
         if md=@chunk.match(HEREDOC_START)
-          token :Heredoc, md[0]
+          token :Heredoc, md[1]
           md[0].length
         end
       end
