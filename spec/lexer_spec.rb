@@ -178,4 +178,38 @@ describe Yap::Line::Lexer do
     end
   end
 
+  context "heredoc tokens" do
+    describe "started by starting with double arrows followed by a character: foo <<E" do
+      let(:str){ "foo <<E"}
+      it { should eq [
+        [:Command, t("foo", lineno:0)],
+        [:Heredoc, t("<<E", lineno:0)]
+      ]}
+    end
+
+    describe "started by starting with double arrows followed by multiple character: foo <<FOO" do
+      let(:str){ "foo <<FOO"}
+      it { should eq [
+        [:Command, t("foo", lineno:0)],
+        [:Heredoc, t("<<FOO", lineno:0)]
+      ]}
+    end
+
+    describe "started by starting with double arrows followed by numbers characters: foo <<FOO" do
+      let(:str){ "foo <<12"}
+      it { should eq [
+        [:Command, t("foo", lineno:0)],
+        [:Heredoc, t("<<12", lineno:0)]
+      ]}
+    end
+
+    describe "started by starting with double arrows followed by a mixture of alphanumeric characters: foo <<L337" do
+      let(:str){ "foo <<L337"}
+      it { should eq [
+        [:Command, t("foo", lineno:0)],
+        [:Heredoc, t("<<L337", lineno:0)]
+      ]}
+    end
+  end
+
 end

@@ -37,7 +37,8 @@ module Yap
       WHITESPACE             = /\A[^\n\S]+/
       ARGUMENT               = /\A([\S]+)/
       TERMINATOR             = /\A(;)/
-      CONDITIONAL_TERMINATOR =/\A(&&|\|\|)/
+      CONDITIONAL_TERMINATOR = /\A(&&|\|\|)/
+      HEREDOC_START          = /\A<<[A-z0-9]+/
 
       def tokenize(str)
         @str = str
@@ -54,9 +55,9 @@ module Yap
           result = command_token ||
             whitespace_token ||
             terminator_token ||
+            heredoc_token ||
             string_argument_token ||
             argument_token ||
-
 
           count += 1
           raise "Infinite loop detected on #{@chunk.inspect}" if count == max
@@ -77,6 +78,13 @@ module Yap
         if !@looking_for_args && md=@chunk.match(COMMAND)
           @looking_for_args = true
           token :Command, md[0]
+          md[0].length
+        end
+      end
+
+      def heredoc_token
+        if md=@chunk.match(HEREDOC_START)
+          token :Heredoc, md[0]
           md[0].length
         end
       end
