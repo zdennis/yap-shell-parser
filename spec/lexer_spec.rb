@@ -21,7 +21,7 @@ describe Yap::Line::Lexer do
     ]}
   end
 
-  describe "command parsing" do
+  describe "commands" do
     describe "can begin with periods: .core" do
       let(:str){ ".core" }
       it { should eq [
@@ -41,6 +41,15 @@ describe Yap::Line::Lexer do
       it { should eq [
         t(:Command, "core.", lineno:0)
       ]}
+    end
+  end
+
+  describe "literal commands" do
+    describe "begin with the backslash escape" do
+      let(:str){ '\rm' }
+      it { should eq [
+        t(:LiteralCommand, "rm", lineno: 0)
+        ]}
     end
   end
 

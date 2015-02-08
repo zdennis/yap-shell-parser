@@ -35,6 +35,7 @@ module Yap
       end
 
       COMMAND                = /\A([A-Za-z_\.]+[A-Za-z_0-9\.]*)/
+      LITERAL_COMMAND        = /\A\\([A-Za-z_\.]+[A-Za-z_0-9\.]*)/
       WHITESPACE             = /\A[^\n\S]+/
       ARGUMENT               = /\A([\S]+)/
       TERMINATOR             = /\A(;|\|)/
@@ -55,6 +56,7 @@ module Yap
 
         while process_next_chunk.call
           result = command_token ||
+            literal_command_token ||
             whitespace_token ||
             terminator_token ||
             heredoc_token ||
@@ -80,7 +82,15 @@ module Yap
       def command_token
         if !@looking_for_args && md=@chunk.match(COMMAND)
           @looking_for_args = true
-          token :Command, md[0]
+          token :Command, md[1]
+          md[0].length
+        end
+      end
+
+      def literal_command_token
+        if !@looking_for_args && md=@chunk.match(LITERAL_COMMAND)
+          @looking_for_args = true
+          token :LiteralCommand, md[1]
           md[0].length
         end
       end
