@@ -17,7 +17,7 @@ module Yap
 
         def <=>(other)
           return -1 if self.class != other.class
-          return 0 if [value, lineno, attrs] == [other.value, other.lineno, other.attrs]
+          return 0 if [tag, value, lineno, attrs] == [other.tag, other.value, other.lineno, other.attrs]
           -1
         end
 
@@ -37,9 +37,10 @@ module Yap
       COMMAND                = /\A([A-Za-z_]+[A-Za-z_0-9]*)/
       WHITESPACE             = /\A[^\n\S]+/
       ARGUMENT               = /\A([\S]+)/
-      TERMINATOR             = /\A(;)/
+      TERMINATOR             = /\A(;|\|)/
       CONDITIONAL_TERMINATOR = /\A(&&|\|\|)/
       HEREDOC_START          = /\A<<([A-z0-9]+)/
+      INTERNAL_EVAL          = /\A\!/
 
       def tokenize(str)
         @str = str
@@ -59,6 +60,7 @@ module Yap
             heredoc_token ||
             string_argument_token ||
             argument_token ||
+            internal_eval_token
 
           count += 1
           raise "Infinite loop detected on #{@chunk.inspect}" if count == max
@@ -90,6 +92,14 @@ module Yap
         end
       end
 
+      def internal_eval_token
+        if md=@chunk.match(INTERNAL_EVAL)
+          result = process_internal_eval @chunk[md.length..-1]
+          token :InternalEval, result.str
+          return result.consumed_length
+        end
+      end
+
       # Matches and consumes non-meaningful whitespace.
       def whitespace_token
         return nil unless md=WHITESPACE.match(@chunk)
@@ -105,13 +115,13 @@ module Yap
       end
 
       def terminator_token
-        if md=@chunk.match(TERMINATOR)
-          @looking_for_args = false
-          token :Terminator, md[0]
-          md[0].length
-        elsif md=@chunk.match(CONDITIONAL_TERMINATOR)
+        if md=@chunk.match(CONDITIONAL_TERMINATOR)
           @looking_for_args = false
           token :ConditionalTerminator, md[0]
+          md[0].length
+        elsif md=@chunk.match(TERMINATOR)
+          @looking_for_args = false
+          token :Terminator, md[0]
           md[0].length
         end
       end
@@ -122,6 +132,43 @@ module Yap
           result = process_string @chunk[0..-1], @chunk[0]
           token :Argument, result.str
           return result.consumed_length
+        end
+      end
+
+      def process_internal_eval(input_str)
+        scope = []
+        words = []
+        str = ''
+
+        i = 0
+        loop do
+          ch = input_str[i]
+
+          popped = false
+          if scope.last == ch
+            scope.pop
+            popped = true
+          end
+
+          if scope.empty? && md=input_str[i..-1].match(/\A(;|\||&&)/)
+            return OpenStruct.new(str:str.strip, consumed_length:i)
+          elsif (i == input_str.length)
+            return OpenStruct.new(str:str.strip, consumed_length:i+1)
+          else
+            if !popped
+              if %w(' ").include?(ch)
+                scope << ch
+              elsif ch == "{"
+                scope << "}"
+              elsif ch == "["
+                scope << "]"
+              elsif ch == "("
+                scope << ")"
+              end
+            end
+            str << ch
+          end
+          i += 1
         end
       end
 

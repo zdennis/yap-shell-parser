@@ -5,10 +5,12 @@ module Yap
   module Line
     class Statement
       attr_reader :command, :args
+      attr_accessor :heredoc_marker
 
-      def initialize(command:command, args:args)
+      def initialize(command:command, args:args, heredoc_marker:nil)
         @command = command
         @args = args
+        @heredoc_marker = heredoc_marker
       end
     end
 
@@ -43,17 +45,19 @@ module Yap
             arg_tokens = []
             loop do
               token = tokens[i+=1]
-              break if i >= tokens.length
-              break if [:Terminator, :ConditionalTerminator].include?(token.tag)
+              break if i >= tokens.length || token.tag != :Argument
               arg_tokens << token
             end
             @ast << Statement.new(command: command_token.value, args:arg_tokens.map(&:value))
+          when :Heredoc
+            @ast.last.heredoc_marker = token.value
+            i += 1
           when :Terminator
             i += 1
           when :ConditionalTerminator
-            i += 1
             node = @ast.pop
             @ast << AndStatement.new(node)
+            i += 1
           end
         end
         @ast

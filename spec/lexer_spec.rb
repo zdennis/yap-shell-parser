@@ -178,7 +178,7 @@ describe Yap::Line::Lexer do
     end
   end
 
-  context "heredoc tokens" do
+  context "heredocs" do
     describe "started by starting with double arrows followed by a character: foo <<E" do
       let(:str){ "foo <<E"}
       it { should eq [
@@ -210,6 +210,77 @@ describe Yap::Line::Lexer do
         t(:Heredoc, "L337", lineno:0)
       ]}
     end
+  end
+
+  context "internal evaluations" do
+    describe "started by a exclamation point: !to_s" do
+      let(:str){ "!to_s" }
+      it { should eq [
+        t(:InternalEval, "to_s", lineno:0)
+      ]}
+    end
+
+    describe "can handle quoted strings: !a + 'b' + \"c\" + d" do
+      let(:str){ "!a + 'b' + \"c\" + d" }
+      it { should eq [
+        t(:InternalEval, "a + 'b' + \"c\" + d", lineno:0)
+      ]}
+    end
+
+    describe "can handle {/} blocks: !foo.map{ |bar| bar + 1 }" do
+      let(:str){ "!foo.map{ |bar| bar + 1 }" }
+      it { should eq [
+        t(:InternalEval, "foo.map{ |bar| bar + 1 }", lineno:0)
+      ]}
+    end
+
+    describe "can handle parentheses in method calls: !foo.map(&:bar)" do
+      let(:str){ "!foo.map(&:bar)" }
+      it { should eq [
+        t(:InternalEval, "foo.map(&:bar)", lineno:0)
+      ]}
+    end
+
+    describe "doesn't consume beyond a semi-colon terminator into other commands: !foo.map(&:bar) ; grep fox" do
+      let(:str){ "!foo.map(&:bar) ; grep fox" }
+      it { should eq [
+        t(:InternalEval, "foo.map(&:bar)", lineno:0),
+        t(:Terminator, ";", lineno:0),
+        t(:Command, "grep", lineno:0),
+        t(:Argument, "fox", lineno:0)
+      ]}
+    end
+
+    describe "doesn't consume beyond a pipe terminator into other commands: !foo.map(&:bar) | grep fox" do
+      let(:str){ "!foo.map(&:bar) | grep fox" }
+      it { should eq [
+        t(:InternalEval, "foo.map(&:bar)", lineno:0),
+        t(:Terminator, "|", lineno:0),
+        t(:Command, "grep", lineno:0),
+        t(:Argument, "fox", lineno:0)
+      ]}
+    end
+
+    describe "doesn't consume beyond a double-ampersand terminator into other commands: !foo.map(&:bar) && grep fox" do
+      let(:str){ "!foo.map(&:bar) && grep fox" }
+      it { should eq [
+        t(:InternalEval, "foo.map(&:bar)", lineno:0),
+        t(:ConditionalTerminator, "&&", lineno:0),
+        t(:Command, "grep", lineno:0),
+        t(:Argument, "fox", lineno:0)
+      ]}
+    end
+
+    describe "doesn't consume beyond a double-pipe terminator into other commands: !foo.map(&:bar) || grep fox" do
+      let(:str){ "!foo.map(&:bar) || grep fox" }
+      it { should eq [
+        t(:InternalEval, "foo.map(&:bar)", lineno:0),
+        t(:ConditionalTerminator, "||", lineno:0),
+        t(:Command, "grep", lineno:0),
+        t(:Argument, "fox", lineno:0)
+      ]}
+    end
+
   end
 
 end
