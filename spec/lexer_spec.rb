@@ -15,10 +15,33 @@ describe Yap::Line::Lexer do
 
   describe "env variables" do
     let(:str){ "foo $baz" }
+    it { should eq [
+      t(:Command, "foo", lineno:0),
+      t(:Argument, "$baz", lineno:0)
+    ]}
+  end
+
+  describe "command parsing" do
+    describe "can begin with periods: .core" do
+      let(:str){ ".core" }
       it { should eq [
-        t(:Command, "foo", lineno:0),
-        t(:Argument, "$baz", lineno:0)
+        t(:Command, ".core", lineno:0)
       ]}
+    end
+
+    describe "can contain periods: ag.core" do
+      let(:str){ "ag.core" }
+      it { should eq [
+        t(:Command, "ag.core", lineno:0)
+      ]}
+    end
+
+    describe "can end with periods: .core" do
+      let(:str){ "core." }
+      it { should eq [
+        t(:Command, "core.", lineno:0)
+      ]}
+    end
   end
 
   context "argument parsing" do

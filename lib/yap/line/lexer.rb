@@ -34,7 +34,7 @@ module Yap
         end
       end
 
-      COMMAND                = /\A([A-Za-z_]+[A-Za-z_0-9]*)/
+      COMMAND                = /\A([A-Za-z_\.]+[A-Za-z_0-9\.]*)/
       WHITESPACE             = /\A[^\n\S]+/
       ARGUMENT               = /\A([\S]+)/
       TERMINATOR             = /\A(;|\|)/
