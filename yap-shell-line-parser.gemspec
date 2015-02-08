@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'yap/line/parser/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "yap-line-parser"
+  spec.name          = "yap-shell-line-parser"
   spec.version       = Yap::Line::Parser::VERSION
   spec.authors       = ["Zach Dennis"]
   spec.email         = ["zach.dennis@gmail.com"]
