@@ -109,8 +109,27 @@ module Yap
 
       def argument_token
         if @looking_for_args && md=@chunk.match(ARGUMENT)
-          token :Argument, md[0]
-          md[0].length
+          str = ''
+          i = 0
+          loop do
+            ch = @chunk[i]
+            if %w(' ").include?(ch)
+              result = process_string @chunk[i..-1], ch
+              str << result.str
+              i += result.consumed_length
+
+            elsif ch =~ /\s/
+              break
+            else
+              str << ch
+              i += 1
+            end
+
+            break if i >= @chunk.length
+          end
+
+          token :Argument, str
+          i
         end
       end
 

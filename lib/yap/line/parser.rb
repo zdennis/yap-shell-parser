@@ -7,10 +7,30 @@ module Yap
       attr_reader :command, :args
       attr_accessor :heredoc_marker
 
-      def initialize(command:command, args:args, heredoc_marker:nil)
+      def initialize(command:, args:, heredoc_marker:nil)
         @command = command
         @args = args
         @heredoc_marker = heredoc_marker
+      end
+
+      def internally_evaluate?
+        false
+      end
+    end
+
+    class InternalEvalStatement
+      attr_reader :command
+
+      def initialize(command:)
+        @command = command
+      end
+
+      def heredoc_marker
+        nil
+      end
+
+      def internally_evaluate?
+        true
       end
     end
 
@@ -48,9 +68,12 @@ module Yap
               break if i >= tokens.length || token.tag != :Argument
               arg_tokens << token
             end
-            @ast << Statement.new(command: command_token.value, args:arg_tokens.map(&:value))
+            @ast << Statement.new(command:command_token.value, args:arg_tokens.map(&:value))
           when :Heredoc
             @ast.last.heredoc_marker = token.value
+            i += 1
+          when :InternalEval
+            @ast << InternalEvalStatement.new(command:token.value)
             i += 1
           when :Terminator
             i += 1

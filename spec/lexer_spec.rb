@@ -97,6 +97,14 @@ describe Yap::Line::Lexer do
           t(:Argument, "how are 'you'?", lineno:0)
         ]}
       end
+
+      describe "single quotes with spaces and assignment" do
+        let(:str){ "alias z='echo hi'" }
+        it { should eq [
+          t(:Command, "alias", lineno:0),
+          t(:Argument, "z=echo hi", lineno:0),
+        ]}
+      end
     end
 
     context 'double quoted args' do
@@ -138,6 +146,14 @@ describe Yap::Line::Lexer do
           t(:Command, 'ls', lineno:0),
           t(:Argument, 'hello "there"', lineno:0),
           t(:Argument, 'how are "you"?', lineno:0)
+        ]}
+      end
+
+      describe "single quotes with spaces and assignment" do
+        let(:str){ "alias z=\"echo hi\"" }
+        it { should eq [
+          t(:Command, "alias", lineno:0),
+          t(:Argument, "z=echo hi", lineno:0),
         ]}
       end
     end
