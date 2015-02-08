@@ -26,7 +26,7 @@ module Yap
         end
 
         def to_s
-          green("Token(#{tag.inspect} #{value.inspect} on #{lineno})")
+          "Token(#{tag.inspect} #{value.inspect} on #{lineno})"
         end
 
         def length

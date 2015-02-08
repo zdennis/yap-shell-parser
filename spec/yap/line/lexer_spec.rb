@@ -1,5 +1,5 @@
 require 'spec_helper'
-require File.dirname(__FILE__) + "/../lib/yap/line/lexer"
+require 'yap/line/lexer'
 
 describe Yap::Line::Lexer do
   subject { described_class.new.tokenize(str) }
