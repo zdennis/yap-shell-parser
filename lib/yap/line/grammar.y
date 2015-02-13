@@ -28,11 +28,13 @@ expr : expr StatementTerminator mulex
   | mulex
     { result = val }
 
-mulex : mulex ConditionalTerminator nulex
+mulex : mulex ConditionalTerminator pipeline
     { result = val[1], val[0], val[2] }
-  | nulex
+  | pipeline
 
-nulex : command
+pipeline : pipeline PipeTerminator command
+    { result = val[1], val[0], val[2] }
+  | command
 
 command : Command
     { result = val }
@@ -72,6 +74,9 @@ if $0 == __FILE__
   src = "echo foo ; echo bar baz yep ; ls foo"
   src = "echo foo && echo bar ; ls baz"
   src = "echo foo && echo bar ; ls baz ; echo zach || echo gretchen"
+  src = "echo foo | bar"
+  src = "echo foo | bar && foo | bar"
+  src = "foo && bar ; word || baz ; yep | grep -v foo"
   puts 'parsing:'
   print src
   puts

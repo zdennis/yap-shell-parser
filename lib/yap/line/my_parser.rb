@@ -9,7 +9,7 @@ module Yap
   module Line
     class MyParser < Racc::Parser
 
-module_eval(<<'...end grammar.y/module_eval...', 'grammar.y', 50)
+module_eval(<<'...end grammar.y/module_eval...', 'grammar.y', 51)
 
   def parse(str)
     @q = Yap::Line::Lexer.new.tokenize(str)
@@ -28,27 +28,29 @@ puts "---- parse tree follows ----"
 ##### State transition tables begin ###
 
 racc_action_table = [
-     7,     8,     9,    10,    12,    13,     7,     7,    16,    10 ]
+     7,     8,     9,    10,    11,    13,    14,     7,     7,     7,
+    18,    10,    11 ]
 
 racc_action_check = [
-     0,     1,     3,     4,     7,     8,     9,    10,    11,    14 ]
+     0,     1,     3,     4,     5,     7,     8,     9,    10,    11,
+    12,    15,    16 ]
 
 racc_action_pointer = [
-    -2,     1,   nil,    -5,    -5,   nil,   nil,     0,     5,     4,
-     5,     4,   nil,   nil,     1,   nil,   nil ]
+    -2,     1,   nil,    -5,    -5,    -5,   nil,     1,     6,     5,
+     6,     7,     6,   nil,   nil,     3,     3,   nil,   nil ]
 
 racc_action_default = [
-   -12,   -12,    -1,    -2,    -4,    -6,    -7,    -8,   -12,   -12,
-   -12,    -9,   -10,    17,    -3,    -5,   -11 ]
+   -13,   -13,    -1,    -2,    -4,    -6,    -8,    -9,   -13,   -13,
+   -13,   -13,   -10,   -11,    19,    -3,    -5,    -7,   -12 ]
 
 racc_goto_table = [
-     4,     1,     3,     2,    15,    11,   nil,   nil,   nil,    14 ]
+     4,     1,     3,     2,    16,    17,    12,   nil,   nil,    15 ]
 
 racc_goto_check = [
-     4,     1,     3,     2,     5,     7,   nil,   nil,   nil,     4 ]
+     4,     1,     3,     2,     5,     6,     7,   nil,   nil,     4 ]
 
 racc_goto_pointer = [
-   nil,     1,     3,     2,     0,    -6,   nil,    -2 ]
+   nil,     1,     3,     2,     0,    -6,    -6,    -1 ]
 
 racc_goto_default = [
    nil,   nil,   nil,   nil,   nil,     5,     6,   nil ]
@@ -61,15 +63,16 @@ racc_reduce_table = [
   1, 13, :_reduce_4,
   3, 14, :_reduce_5,
   1, 14, :_reduce_none,
+  3, 15, :_reduce_7,
   1, 15, :_reduce_none,
-  1, 16, :_reduce_8,
-  2, 16, :_reduce_9,
-  1, 17, :_reduce_10,
-  2, 17, :_reduce_11 ]
+  1, 16, :_reduce_9,
+  2, 16, :_reduce_10,
+  1, 17, :_reduce_11,
+  2, 17, :_reduce_12 ]
 
-racc_reduce_n = 12
+racc_reduce_n = 13
 
-racc_shift_n = 17
+racc_shift_n = 19
 
 racc_token_table = {
   false => 0,
@@ -119,7 +122,7 @@ Racc_token_to_s_table = [
   "stmt",
   "expr",
   "mulex",
-  "nulex",
+  "pipeline",
   "command",
   "args" ]
 
@@ -156,31 +159,38 @@ module_eval(<<'.,.,', 'grammar.y', 31)
 
 # reduce 6 omitted
 
-# reduce 7 omitted
+module_eval(<<'.,.,', 'grammar.y', 35)
+  def _reduce_7(val, _values, result)
+     result = val[1], val[0], val[2] 
+    result
+  end
+.,.,
 
-module_eval(<<'.,.,', 'grammar.y', 38)
-  def _reduce_8(val, _values, result)
+# reduce 8 omitted
+
+module_eval(<<'.,.,', 'grammar.y', 39)
+  def _reduce_9(val, _values, result)
      result = val 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 40)
-  def _reduce_9(val, _values, result)
+module_eval(<<'.,.,', 'grammar.y', 41)
+  def _reduce_10(val, _values, result)
      result = [val[0], val[1]].flatten 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 43)
-  def _reduce_10(val, _values, result)
+module_eval(<<'.,.,', 'grammar.y', 44)
+  def _reduce_11(val, _values, result)
      result = [val[0]]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 45)
-  def _reduce_11(val, _values, result)
+module_eval(<<'.,.,', 'grammar.y', 46)
+  def _reduce_12(val, _values, result)
      result = val 
     result
   end
@@ -205,6 +215,9 @@ if $0 == __FILE__
   src = "echo foo ; echo bar baz yep ; ls foo"
   src = "echo foo && echo bar ; ls baz"
   src = "echo foo && echo bar ; ls baz ; echo zach || echo gretchen"
+  src = "echo foo | bar"
+  src = "echo foo | bar && foo | bar"
+  src = "foo && bar ; word || baz ; yep | grep -v foo"
   puts 'parsing:'
   print src
   puts
