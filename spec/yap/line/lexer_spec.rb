@@ -339,7 +339,32 @@ describe Yap::Line::Lexer do
         t(:Argument, "fox", lineno:0)
       ]}
     end
+  end
 
+  describe 'grouping statements' do
+    describe 'simple one command: (bar)' do
+      let(:str){ "(bar)" }
+      it { should eq [
+        t('(', '(', lineno:0),
+        t(:Command, "bar", lineno:0),
+        t(')', ')', lineno:0)
+      ]}
+    end
+
+    describe 'multiple commands: (bar ; baz && foo | yep' do
+      let(:str){ '(bar ; baz && foo | yep)' }
+      it { should eq [
+        t('(', '(', lineno:0),
+        t(:Command, "bar", lineno:0),
+        t(:Separator, ";", lineno:0),
+        t(:Command, "baz", lineno:0),
+        t(:Conditional, "&&", lineno:0),
+        t(:Command, "foo", lineno:0),
+        t(:Pipe, "|", lineno:0),
+        t(:Command, "yep", lineno:0),
+        t(')', ')', lineno:0)
+      ]}
+    end
   end
 
 end

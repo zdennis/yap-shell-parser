@@ -37,12 +37,13 @@ module Yap
       COMMAND                = /\A([A-Za-z_\.]+[A-Za-z_0-9\.]*)/
       LITERAL_COMMAND        = /\A\\([A-Za-z_\.]+[A-Za-z_0-9\.]*)/
       WHITESPACE             = /\A[^\n\S]+/
-      ARGUMENT               = /\A([\S]+)/
+      ARGUMENT               = /\A([\$\-A-z_\.0-9'"=]+)/
       STATEMENT_TERMINATOR   = /\A(;)/
       PIPE_TERMINATOR        = /\A(\|)/
       CONDITIONAL_TERMINATOR = /\A(&&|\|\|)/
       HEREDOC_START          = /\A<<([A-z0-9]+)/
       INTERNAL_EVAL          = /\A\!/
+      SUBGROUP               = /\A(\(|\))/
 
       def tokenize(str)
         @str = str
@@ -56,7 +57,8 @@ module Yap
         process_next_chunk = -> { @chunk = str.slice(@current_position..-1) ; @chunk != "" }
 
         while process_next_chunk.call
-          result = command_token ||
+          result = subgroup_token ||
+            command_token ||
             literal_command_token ||
             whitespace_token ||
             terminator_token ||
@@ -111,6 +113,13 @@ module Yap
         end
       end
 
+      def subgroup_token
+        if md=@chunk.match(SUBGROUP)
+          token md[0], md[0]
+          return md[0].length
+        end
+      end
+
       # Matches and consumes non-meaningful whitespace.
       def whitespace_token
         return nil unless md=WHITESPACE.match(@chunk)
@@ -129,7 +138,7 @@ module Yap
               str << result.str
               i += result.consumed_length
 
-            elsif ch =~ /\s/
+            elsif ch !~ ARGUMENT
               break
             else
               str << ch

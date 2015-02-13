@@ -32,9 +32,14 @@ mulex : mulex Conditional pipeline
     { result = val[1], val[0], val[2] }
   | pipeline
 
-pipeline : pipeline Pipe command
+pipeline : pipeline Pipe stmts2
     { result = val[1], val[0], val[2] }
+  | stmts2
+
+stmts2 : '(' expr ')'
+    { result = val[0], *val[1], val[2] }
   | command
+
 
 command : Command
     { result = val }
@@ -77,6 +82,9 @@ if $0 == __FILE__
   src = "echo foo | bar"
   src = "echo foo | bar && foo | bar"
   src = "foo && bar ; word || baz ; yep | grep -v foo"
+  src = "( foo )"
+  src = "( foo a b && bar c d )"
+  src = "( foo a b && (bar c d | baz e f))"
   puts 'parsing:'
   print src
   puts
