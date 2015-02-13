@@ -38,7 +38,8 @@ module Yap
       LITERAL_COMMAND        = /\A\\([A-Za-z_\.]+[A-Za-z_0-9\.]*)/
       WHITESPACE             = /\A[^\n\S]+/
       ARGUMENT               = /\A([\S]+)/
-      TERMINATOR             = /\A(;|\|)/
+      STATEMENT_TERMINATOR   = /\A(;)/
+      PIPE_TERMINATOR        = /\A(\|)/
       CONDITIONAL_TERMINATOR = /\A(&&|\|\|)/
       HEREDOC_START          = /\A<<([A-z0-9]+)/
       INTERNAL_EVAL          = /\A\!/
@@ -76,7 +77,7 @@ module Yap
       private
 
       def token(tag, value, attrs:{})
-        @tokens.push Token.new(tag, value, lineno:@lineno, attrs:attrs)
+        @tokens.push [tag, Token.new(tag, value, lineno:@lineno, attrs:attrs)]
       end
 
       def command_token
@@ -148,9 +149,13 @@ module Yap
           @looking_for_args = false
           token :ConditionalTerminator, md[0]
           md[0].length
-        elsif md=@chunk.match(TERMINATOR)
+        elsif md=@chunk.match(STATEMENT_TERMINATOR)
           @looking_for_args = false
-          token :Terminator, md[0]
+          token :StatementTerminator, md[0]
+          md[0].length
+        elsif md=@chunk.match(PIPE_TERMINATOR)
+          @looking_for_args = false
+          token :PipeTerminator, md[0]
           md[0].length
         end
       end

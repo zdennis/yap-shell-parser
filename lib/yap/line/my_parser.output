@@ -1,0 +1,196 @@
+
+
+-------- Grammar --------
+
+rule 1 program: stmt
+rule 2 stmt: expr
+rule 3 expr: expr StatementTerminator mulex
+rule 4 expr: mulex
+rule 5 mulex: mulex ConditionalTerminator nulex
+rule 6 mulex: nulex
+rule 7 nulex: command
+rule 8 command: Command
+rule 9 command: Command args
+rule 10 args: Argument
+rule 11 args: args Argument
+
+------- Symbols -------
+
+**Nonterminals, with rules where they appear
+
+  $start (10)
+    on right: 
+    on left : 
+  program (11)
+    on right: 
+    on left : 1
+  stmt (12)
+    on right: 1
+    on left : 2
+  expr (13)
+    on right: 2 3
+    on left : 3 4
+  mulex (14)
+    on right: 3 4 5
+    on left : 5 6
+  nulex (15)
+    on right: 5 6
+    on left : 7
+  command (16)
+    on right: 7
+    on left : 8 9
+  args (17)
+    on right: 9 11
+    on left : 10 11
+
+**Terminals, with rules where they appear
+
+  $end (0) 
+  error (1) 
+  Command (2) 8 9
+  LiteralCommand (3) 
+  Argument (4) 10 11
+  Heredoc (5) 
+  InternalEval (6) 
+  StatementTerminator (7) 3
+  ConditionalTerminator (8) 5
+  PipeTerminator (9) 
+
+--------- State ---------
+
+state 0
+
+
+  Command       shift, and go to state 7
+
+  program       go to state 1
+  stmt          go to state 2
+  expr          go to state 3
+  mulex         go to state 4
+  nulex         go to state 5
+  command       go to state 6
+
+state 1
+
+
+  $end          shift, and go to state 8
+
+
+state 2
+
+   1) program : stmt _
+
+  $default      reduce using rule 1 (program)
+
+
+state 3
+
+   2) stmt : expr _
+   3) expr : expr _ StatementTerminator mulex
+
+  StatementTerminator  shift, and go to state 9
+  $default      reduce using rule 2 (stmt)
+
+
+state 4
+
+   4) expr : mulex _
+   5) mulex : mulex _ ConditionalTerminator nulex
+
+  ConditionalTerminator  shift, and go to state 10
+  $default      reduce using rule 4 (expr)
+
+
+state 5
+
+   6) mulex : nulex _
+
+  $default      reduce using rule 6 (mulex)
+
+
+state 6
+
+   7) nulex : command _
+
+  $default      reduce using rule 7 (nulex)
+
+
+state 7
+
+   8) command : Command _
+   9) command : Command _ args
+
+  Argument      shift, and go to state 12
+  $default      reduce using rule 8 (command)
+
+  args          go to state 11
+
+state 8
+
+
+  $end          shift, and go to state 13
+
+
+state 9
+
+   3) expr : expr StatementTerminator _ mulex
+
+  Command       shift, and go to state 7
+
+  mulex         go to state 14
+  nulex         go to state 5
+  command       go to state 6
+
+state 10
+
+   5) mulex : mulex ConditionalTerminator _ nulex
+
+  Command       shift, and go to state 7
+
+  nulex         go to state 15
+  command       go to state 6
+
+state 11
+
+   9) command : Command args _
+  11) args : args _ Argument
+
+  Argument      shift, and go to state 16
+  $default      reduce using rule 9 (command)
+
+
+state 12
+
+  10) args : Argument _
+
+  $default      reduce using rule 10 (args)
+
+
+state 13
+
+
+  $default      accept
+
+
+state 14
+
+   3) expr : expr StatementTerminator mulex _
+   5) mulex : mulex _ ConditionalTerminator nulex
+
+  ConditionalTerminator  shift, and go to state 10
+  $default      reduce using rule 3 (expr)
+
+
+state 15
+
+   5) mulex : mulex ConditionalTerminator nulex _
+
+  $default      reduce using rule 5 (mulex)
+
+
+state 16
+
+  11) args : args Argument _
+
+  $default      reduce using rule 11 (args)
+

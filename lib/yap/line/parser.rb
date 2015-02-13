@@ -94,7 +94,7 @@ module Yap
           when :InternalEval
             @ast << InternalEvalStatement.new(command:token.value)
             i += 1
-          when :Terminator
+          when :StatementTerminator
             i += 1
           when :ConditionalTerminator
             node = @ast.pop

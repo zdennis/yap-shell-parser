@@ -1,0 +1,3 @@
+#!/bin/bash
+
+racc lib/yap/line/grammar.y -o lib/yap/line/my_parser.rb
