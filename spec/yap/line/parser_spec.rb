@@ -162,10 +162,10 @@ describe Yap::Line::Parser do
     end
 
     describe "terminator tokens" do
-      context "with ; :Terminator tokens separating two tokens" do
+      context "with ; :Separator tokens separating two tokens" do
         let(:tokens){[
           t(:InternalEval, "ruby code"),
-          t(:Terminator, ";"),
+          t(:Separator, ";"),
           t(:Command, "foo")
         ]}
         it "doesnt do anything special for them" do
@@ -176,10 +176,10 @@ describe Yap::Line::Parser do
         end
       end
       #
-      # context "with || :ConditionalTerminator tokens separating two tokens" do
+      # context "with || :Conditional tokens separating two tokens" do
       #   let(:tokens){[
       #     t(:InternalEval, "ruby code"),
-      #     t(:ConditionalTerminator, "&&"),
+      #     t(:Conditional, "&&"),
       #     t(:Command, "foo")
       #   ]}
       #   it { should eq [

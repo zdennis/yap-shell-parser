@@ -3,7 +3,7 @@
 # convert Array-like string into Ruby's Array.
 
 class Yap::Line::MyParser
-token Command LiteralCommand Argument Heredoc InternalEval StatementTerminator ConditionalTerminator PipeTerminator
+token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe
   #
   # prechigh
   # #   left '**' '*' '/' '%'
@@ -11,9 +11,9 @@ token Command LiteralCommand Argument Heredoc InternalEval StatementTerminator C
   # #   left '&&' '||'
   # #   left '|' '^' '&'
   # #   # right Not
-  # left StatementTerminator
-  # left ConditionalTerminator
-  # right PipeTerminator
+  # left Separator
+  # left Conditional
+  # right Pipe
   # preclow
 
 rule
@@ -23,16 +23,16 @@ program : stmt
 
 stmt : expr
 
-expr : expr StatementTerminator mulex
+expr : expr Separator mulex
     { result = [*val[0], val[1], val[2]] }
   | mulex
     { result = val }
 
-mulex : mulex ConditionalTerminator pipeline
+mulex : mulex Conditional pipeline
     { result = val[1], val[0], val[2] }
   | pipeline
 
-pipeline : pipeline PipeTerminator command
+pipeline : pipeline Pipe command
     { result = val[1], val[0], val[2] }
   | command
 

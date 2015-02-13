@@ -5,7 +5,7 @@ describe Yap::Line::Lexer do
   subject { described_class.new.tokenize(str) }
 
   def t(tag, val, lineno:0, attrs:{})
-    Yap::Line::Lexer::Token.new(tag, val, lineno:lineno, attrs:attrs)
+    [tag, Yap::Line::Lexer::Token.new(tag, val, lineno:lineno, attrs:attrs)]
   end
 
   describe "empty string" do
@@ -194,10 +194,21 @@ describe Yap::Line::Lexer do
   context "statements" do
     ["foo;baz", "foo; baz", "foo ;baz", "foo ; baz", "foo     ;    baz"].each do |src|
       describe "are separated by a semi-colon: #{src.inspect}" do
-        let(:str){ "foo ; baz"}
+        let(:str){ src }
         it { should eq [
           t(:Command, "foo", lineno:0),
-          t(:Terminator, ";", lineno:0),
+          t(:Separator, ";", lineno:0),
+          t(:Command, "baz", lineno:0)
+        ]}
+      end
+    end
+
+    ["foo|baz", "foo| baz", "foo |baz", "foo | baz", "foo     |    baz"].each do |src|
+      describe "are separated by a semi-colon: #{src.inspect}" do
+        let(:str){ src }
+        it { should eq [
+          t(:Command, "foo", lineno:0),
+          t(:Pipe, "|", lineno:0),
           t(:Command, "baz", lineno:0)
         ]}
       end
@@ -205,10 +216,10 @@ describe Yap::Line::Lexer do
 
     ["foo&&baz", "foo&& baz", "foo &&baz", "foo && baz", "foo     &&    baz"].each do |src|
       describe "are separated by double ampersands: #{src.inspect}" do
-        let(:str){ "foo && baz"}
+        let(:str){ src }
         it { should eq [
           t(:Command, "foo", lineno:0),
-          t(:ConditionalTerminator, "&&", lineno:0),
+          t(:Conditional, "&&", lineno:0),
           t(:Command, "baz", lineno:0)
         ]}
       end
@@ -216,10 +227,10 @@ describe Yap::Line::Lexer do
 
     ["foo||baz", "foo|| baz", "foo ||baz", "foo || baz", "foo     ||    baz"].each do |src|
       describe "are separated by double ampersands: #{src.inspect}" do
-        let(:str){ "foo || baz"}
+        let(:str){ src }
         it { should eq [
           t(:Command, "foo", lineno:0),
-          t(:ConditionalTerminator, "||", lineno:0),
+          t(:Conditional, "||", lineno:0),
           t(:Command, "baz", lineno:0)
         ]}
       end
@@ -293,7 +304,7 @@ describe Yap::Line::Lexer do
       let(:str){ "!foo.map(&:bar) ; grep fox" }
       it { should eq [
         t(:InternalEval, "foo.map(&:bar)", lineno:0),
-        t(:Terminator, ";", lineno:0),
+        t(:Separator, ";", lineno:0),
         t(:Command, "grep", lineno:0),
         t(:Argument, "fox", lineno:0)
       ]}
@@ -303,7 +314,7 @@ describe Yap::Line::Lexer do
       let(:str){ "!foo.map(&:bar) | grep fox" }
       it { should eq [
         t(:InternalEval, "foo.map(&:bar)", lineno:0),
-        t(:Terminator, "|", lineno:0),
+        t(:Pipe, "|", lineno:0),
         t(:Command, "grep", lineno:0),
         t(:Argument, "fox", lineno:0)
       ]}
@@ -313,7 +324,7 @@ describe Yap::Line::Lexer do
       let(:str){ "!foo.map(&:bar) && grep fox" }
       it { should eq [
         t(:InternalEval, "foo.map(&:bar)", lineno:0),
-        t(:ConditionalTerminator, "&&", lineno:0),
+        t(:Conditional, "&&", lineno:0),
         t(:Command, "grep", lineno:0),
         t(:Argument, "fox", lineno:0)
       ]}
@@ -323,7 +334,7 @@ describe Yap::Line::Lexer do
       let(:str){ "!foo.map(&:bar) || grep fox" }
       it { should eq [
         t(:InternalEval, "foo.map(&:bar)", lineno:0),
-        t(:ConditionalTerminator, "||", lineno:0),
+        t(:Conditional, "||", lineno:0),
         t(:Command, "grep", lineno:0),
         t(:Argument, "fox", lineno:0)
       ]}

@@ -147,15 +147,15 @@ module Yap
       def terminator_token
         if md=@chunk.match(CONDITIONAL_TERMINATOR)
           @looking_for_args = false
-          token :ConditionalTerminator, md[0]
+          token :Conditional, md[0]
           md[0].length
         elsif md=@chunk.match(STATEMENT_TERMINATOR)
           @looking_for_args = false
-          token :StatementTerminator, md[0]
+          token :Separator, md[0]
           md[0].length
         elsif md=@chunk.match(PIPE_TERMINATOR)
           @looking_for_args = false
-          token :PipeTerminator, md[0]
+          token :Pipe, md[0]
           md[0].length
         end
       end

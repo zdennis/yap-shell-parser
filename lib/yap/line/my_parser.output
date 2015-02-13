@@ -4,9 +4,9 @@
 
 rule 1 program: stmt
 rule 2 stmt: expr
-rule 3 expr: expr StatementTerminator mulex
+rule 3 expr: expr Separator mulex
 rule 4 expr: mulex
-rule 5 mulex: mulex ConditionalTerminator nulex
+rule 5 mulex: mulex Conditional nulex
 rule 6 mulex: nulex
 rule 7 nulex: command
 rule 8 command: Command
@@ -52,9 +52,9 @@ rule 11 args: args Argument
   Argument (4) 10 11
   Heredoc (5) 
   InternalEval (6) 
-  StatementTerminator (7) 3
-  ConditionalTerminator (8) 5
-  PipeTerminator (9) 
+  Separator (7) 3
+  Conditional (8) 5
+  Pipe (9) 
 
 --------- State ---------
 
@@ -86,18 +86,18 @@ state 2
 state 3
 
    2) stmt : expr _
-   3) expr : expr _ StatementTerminator mulex
+   3) expr : expr _ Separator mulex
 
-  StatementTerminator  shift, and go to state 9
+  Separator  shift, and go to state 9
   $default      reduce using rule 2 (stmt)
 
 
 state 4
 
    4) expr : mulex _
-   5) mulex : mulex _ ConditionalTerminator nulex
+   5) mulex : mulex _ Conditional nulex
 
-  ConditionalTerminator  shift, and go to state 10
+  Conditional  shift, and go to state 10
   $default      reduce using rule 4 (expr)
 
 
@@ -133,7 +133,7 @@ state 8
 
 state 9
 
-   3) expr : expr StatementTerminator _ mulex
+   3) expr : expr Separator _ mulex
 
   Command       shift, and go to state 7
 
@@ -143,7 +143,7 @@ state 9
 
 state 10
 
-   5) mulex : mulex ConditionalTerminator _ nulex
+   5) mulex : mulex Conditional _ nulex
 
   Command       shift, and go to state 7
 
@@ -174,16 +174,16 @@ state 13
 
 state 14
 
-   3) expr : expr StatementTerminator mulex _
-   5) mulex : mulex _ ConditionalTerminator nulex
+   3) expr : expr Separator mulex _
+   5) mulex : mulex _ Conditional nulex
 
-  ConditionalTerminator  shift, and go to state 10
+  Conditional  shift, and go to state 10
   $default      reduce using rule 3 (expr)
 
 
 state 15
 
-   5) mulex : mulex ConditionalTerminator nulex _
+   5) mulex : mulex Conditional nulex _
 
   $default      reduce using rule 5 (mulex)
 

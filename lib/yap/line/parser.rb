@@ -94,9 +94,9 @@ module Yap
           when :InternalEval
             @ast << InternalEvalStatement.new(command:token.value)
             i += 1
-          when :StatementTerminator
+          when :Separator
             i += 1
-          when :ConditionalTerminator
+          when :Conditional
             node = @ast.pop
             @ast << AndStatement.new(node)
             i += 1

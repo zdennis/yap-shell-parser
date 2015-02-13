@@ -82,9 +82,9 @@ racc_token_table = {
   :Argument => 4,
   :Heredoc => 5,
   :InternalEval => 6,
-  :StatementTerminator => 7,
-  :ConditionalTerminator => 8,
-  :PipeTerminator => 9 }
+  :Separator => 7,
+  :Conditional => 8,
+  :Pipe => 9 }
 
 racc_nt_base = 10
 
@@ -114,9 +114,9 @@ Racc_token_to_s_table = [
   "Argument",
   "Heredoc",
   "InternalEval",
-  "StatementTerminator",
-  "ConditionalTerminator",
-  "PipeTerminator",
+  "Separator",
+  "Conditional",
+  "Pipe",
   "$start",
   "program",
   "stmt",
@@ -138,21 +138,21 @@ Racc_debug_parser = true
 
 module_eval(<<'.,.,', 'grammar.y', 26)
   def _reduce_3(val, _values, result)
-     result = [*val[0], val[1], val[2]] 
+     result = [*val[0], val[1], val[2]]
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'grammar.y', 28)
   def _reduce_4(val, _values, result)
-     result = val 
+     result = val
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'grammar.y', 31)
   def _reduce_5(val, _values, result)
-     result = val[1], val[0], val[2] 
+     result = val[1], val[0], val[2]
     result
   end
 .,.,
@@ -161,7 +161,7 @@ module_eval(<<'.,.,', 'grammar.y', 31)
 
 module_eval(<<'.,.,', 'grammar.y', 35)
   def _reduce_7(val, _values, result)
-     result = val[1], val[0], val[2] 
+     result = val[1], val[0], val[2]
     result
   end
 .,.,
@@ -170,14 +170,14 @@ module_eval(<<'.,.,', 'grammar.y', 35)
 
 module_eval(<<'.,.,', 'grammar.y', 39)
   def _reduce_9(val, _values, result)
-     result = val 
+     result = val
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'grammar.y', 41)
   def _reduce_10(val, _values, result)
-     result = [val[0], val[1]].flatten 
+     result = [val[0], val[1]].flatten
     result
   end
 .,.,
@@ -191,7 +191,7 @@ module_eval(<<'.,.,', 'grammar.y', 44)
 
 module_eval(<<'.,.,', 'grammar.y', 46)
   def _reduce_12(val, _values, result)
-     result = val 
+     result = val
     result
   end
 .,.,
