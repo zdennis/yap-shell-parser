@@ -34,8 +34,8 @@ module Yap
         end
       end
 
-      COMMAND                = /\A([A-Za-z_\.]+[A-Za-z_0-9\.]*)/
-      LITERAL_COMMAND        = /\A\\([A-Za-z_\.]+[A-Za-z_0-9\.]*)/
+      COMMAND                = /\A([A-Za-z_\.]+[A-Za-z_0-9\.\/\/]*)/
+      LITERAL_COMMAND        = /\A\\([A-Za-z_\.\/]+[A-Za-z_0-9\.\/]*)/
       WHITESPACE             = /\A[^\n\S]+/
       ARGUMENT               = /\A([\$\-A-z_\.0-9'"=]+)/
       STATEMENT_TERMINATOR   = /\A(;)/
