@@ -3,7 +3,7 @@
 # convert Array-like string into Ruby's Array.
 
 class Yap::Line::MyParser
-token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe
+  token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe
   #
   # prechigh
   # #   left '**' '*' '/' '%'
@@ -18,44 +18,55 @@ token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional
 
 rule
 
-# echo foo && echo bar ; ls baz ; echo zach || echo gretchen
-program : stmt
+program : stmts
 
-stmt : expr
-
-expr : expr Separator mulex
-    { result = [val[0], val[2]] }
-  | mulex
+stmts : stmts Separator expr
+    { result = Statements.new(val[0], val[2]) }
+  | expr
     { result = val }
 
-mulex : mulex Conditional pipeline
-    { result = val[1], val[0], val[2] }
+expr : expr Conditional pipeline
+    { result = Conditional.new(val[1].value, val[0], val[2]) }
   | pipeline
 
 pipeline : pipeline Pipe stmts2
     { result = val[1], val[0], val[2] }
   | stmts2
 
-stmts2 : '(' expr ')'
-    { result = val[0], *val[1], val[2] }
+stmts2 : '(' stmts ')'
+    { result = val[1] }
   | command
   | internal_eval
 
-command : Command
-    { result = val }
+command : command2 Heredoc
+    { val[0].heredoc = val[1] ; result = val[0] }
+  | command2
+
+command2: Command
+    { result = Command.new(val[0].value) }
   | Command args
-    { result = [val[0], val[1]].flatten }
+    { result = Command.new(val[0].value, val[1].flatten) }
+  | LiteralCommand
+    { result = Command.new(val[0].value, literal:true) }
+  | LiteralCommand args
+    { result = Command.new(val[0].value, val[1].flatten, literal:true) }
+
 
 args : Argument
-    { result = [val[0]]}
+    { result = [val[0].value] }
   | args Argument
-    { result = val }
+    { result = [val[0], val[1].value] }
 
 internal_eval : InternalEval
     { result = val }
 
 
 ---- inner
+  $LOAD_PATH.unshift File.dirname(__FILE__) + "/../../"
+  require 'yap/line/lexer'
+  require 'yap/line/nodes'
+
+  include Yap::Line::Nodes
 
   def parse(str)
     @q = Yap::Line::Lexer.new.tokenize(str)
@@ -126,6 +137,7 @@ end
 
   $LOAD_PATH.unshift File.dirname(__FILE__) + "/../../"
   require 'yap/line/lexer'
+  require 'yap/line/nodes'
   src = "echo foo"
   src = "echo foo ; echo bar baz yep"
   src = "echo foo && echo bar baz yep"
@@ -144,6 +156,7 @@ end
   src = "foo -b -c ; (this ;that && other  ;thing) && yep"
   src = "4 + 5"
   src = "!'hello' ; 4 - 4 && 10 + 3"
+  src = "\\foo <<-EOT\nbar\nEOT"
   puts 'parsing:'
   print src
   puts
@@ -153,5 +166,7 @@ end
   pp ast
 
   puts "---- Evaluating"
-  Evaluator.new.evaltree(ast)
+    require 'pry'
+  binding.pry
+  # Evaluator.new.evaltree(ast)
 end
