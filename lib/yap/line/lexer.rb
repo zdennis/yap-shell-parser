@@ -202,16 +202,18 @@ module Yap
         loop do
           ch = input_str[i]
           popped = false
-          if scope.last == ch
-            scope.pop
-            popped = true
-          end
 
-          if scope.empty? && md=input_str[i..-1].match(/\A(;|\||&&)/)
-            return OpenStruct.new(str:str.strip, consumed_length:i)
+          if scope.empty? && md=input_str[i..-1].match(/\A(;|\||&&|\))/)
+            return OpenStruct.new(str:str.strip, consumed_length:i+consumed)
+
           elsif (i == input_str.length)
             return OpenStruct.new(str:str.strip, consumed_length:i+consumed)
           else
+            if scope.last == ch
+              scope.pop
+              popped = true
+            end
+
             if !popped
               if %w(' ").include?(ch)
                 scope << ch

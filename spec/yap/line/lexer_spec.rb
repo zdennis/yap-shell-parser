@@ -49,14 +49,28 @@ describe Yap::Line::Lexer do
         t(:Command, "ab4cd", lineno:0)
       ]}
     end
+
+    describe "can contain slashes with periods: foo/bar" do
+      let(:str){ "foo/bar" }
+      it { should eq [
+        t(:Command, "foo/bar", lineno:0)
+      ]}
+    end
   end
 
   describe "literal commands" do
-    describe "begin with the backslash escape" do
+    describe "begin with the backslash escape: \\rm" do
       let(:str){ '\rm' }
       it { should eq [
         t(:LiteralCommand, "rm", lineno: 0)
         ]}
+    end
+
+    describe "can contain slashes with periods: \\foo/bar" do
+      let(:str){ "\\foo/bar" }
+      it { should eq [
+        t(:LiteralCommand, "foo/bar", lineno:0)
+      ]}
     end
   end
 
@@ -407,6 +421,24 @@ describe Yap::Line::Lexer do
       it { should eq [
         t('(', '(', lineno:0),
         t(:Command, "bar", lineno:0),
+        t(')', ')', lineno:0)
+      ]}
+    end
+
+    describe 'simple interval eval: (!bar)' do
+      let(:str){ "(!bar)" }
+      it { should eq [
+        t('(', '(', lineno:0),
+        t(:InternalEval, "bar", lineno:0),
+        t(')', ')', lineno:0)
+      ]}
+    end
+
+    describe 'complicated interval eval: (!foo.map(&:bar).map{ |fasdf| baz })' do
+      let(:str){ "(!foo.map(&:bar).map{ |fasdf| baz })" }
+      it { should eq [
+        t('(', '(', lineno:0),
+        t(:InternalEval, "foo.map(&:bar).map{ |fasdf| baz }", lineno:0),
         t(')', ')', lineno:0)
       ]}
     end
