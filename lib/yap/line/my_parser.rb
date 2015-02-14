@@ -9,7 +9,7 @@ module Yap
   module Line
     class MyParser < Racc::Parser
 
-module_eval(<<'...end grammar.y/module_eval...', 'grammar.y', 60)
+module_eval(<<'...end grammar.y/module_eval...', 'grammar.y', 59)
 
   def parse(str)
     @q = Yap::Line::Lexer.new.tokenize(str)
@@ -152,7 +152,7 @@ Racc_debug_parser = false
 
 module_eval(<<'.,.,', 'grammar.y', 26)
   def _reduce_3(val, _values, result)
-     result = [*val[0], val[1], val[2]] 
+     result = [val[0], val[2]] 
     result
   end
 .,.,
@@ -193,35 +193,35 @@ module_eval(<<'.,.,', 'grammar.y', 39)
 
 # reduce 11 omitted
 
-module_eval(<<'.,.,', 'grammar.y', 45)
+module_eval(<<'.,.,', 'grammar.y', 44)
   def _reduce_12(val, _values, result)
      result = val 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 47)
+module_eval(<<'.,.,', 'grammar.y', 46)
   def _reduce_13(val, _values, result)
      result = [val[0], val[1]].flatten 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 50)
+module_eval(<<'.,.,', 'grammar.y', 49)
   def _reduce_14(val, _values, result)
      result = [val[0]]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 52)
+module_eval(<<'.,.,', 'grammar.y', 51)
   def _reduce_15(val, _values, result)
      result = val 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 55)
+module_eval(<<'.,.,', 'grammar.y', 54)
   def _reduce_16(val, _values, result)
      result = val 
     result
@@ -238,6 +238,57 @@ end
 
 
 if $0 == __FILE__
+
+class Evaluator
+
+  def evaltree(tree)
+    result = 0
+    leftnode = tree[0]
+    if leftnode.is_a?(Array)
+      result = evaltree(leftnode)
+    elsif leftnode
+      puts leftnode.inspect
+      puts tree[1..-1].inspect
+      puts "--"
+      result = evalnode leftnode, tree[1..-1]
+    end
+
+    rightnode = tree[1]
+    if rightnode.is_a?(Array)
+      result = evaltree(rightnode)
+    elsif rightnode
+      puts rightnode.inspect
+      puts tree[1..-1].inspect
+      puts "--"
+      result = evalnode rightnode, tree[1..-1]
+    end
+    result
+  end
+
+  def evalnode(node, parts)
+    result = nil
+    puts "NODE: #{node.inspect}"
+    puts "PARTS: #{parts.inspect}"
+    case node.tag
+    when :InternalEval
+      result = eval node.value
+      puts "Eval'd: #{result}"
+    when :Separator
+      puts "no-op"
+    when :Conditional
+      result = evaltree(parts[0])
+      if result > 0
+        result = evaltree(parts[1])
+      end
+      puts "CEval'd: #{result}"
+    else
+      raise "Don't know how to evalnode: #{node.inspect}"
+    end
+    result
+  end
+end
+
+
   $LOAD_PATH.unshift File.dirname(__FILE__) + "/../../"
   require 'yap/line/lexer'
   src = "echo foo"
@@ -257,11 +308,15 @@ if $0 == __FILE__
   src = "foo -b -c ; (this ;that ;the; other  ;thing) && yep"
   src = "foo -b -c ; (this ;that && other  ;thing) && yep"
   src = "4 + 5"
-  src = "!ruby code here ; echo && 4 + 5"
+  src = "!'hello' ; 4 - 4 && 10 + 3"
   puts 'parsing:'
   print src
   puts
   puts 'result:'
   require 'pp'
-  pp Yap::Line::MyParser.new.parse(src)
+  ast = Yap::Line::MyParser.new.parse(src)
+  pp ast
+
+  puts "---- Evaluating"
+  Evaluator.new.evaltree(ast)
 end
