@@ -42,7 +42,7 @@ module Yap
       PIPE_TERMINATOR        = /\A(\|)/
       CONDITIONAL_TERMINATOR = /\A(&&|\|\|)/
       HEREDOC_START          = /\A<<([A-z0-9]+)/
-      INTERNAL_EVAL          = /\A\!/
+      INTERNAL_EVAL          = /\A(?:(\!)|([0-9]+))/
       SUBGROUP               = /\A(\(|\))/
 
       def tokenize(str)
@@ -98,6 +98,15 @@ module Yap
         end
       end
 
+      def numeric_expr_token
+        if !@looking_for_args && md=@chunk.match(NUMERIC_EXPR)
+          @looking_for_args = true
+          token :NumericExpr, md[1]
+          md[0].length
+        end
+      end
+
+
       def heredoc_token
         if md=@chunk.match(HEREDOC_START)
           token :Heredoc, md[1]
@@ -107,7 +116,14 @@ module Yap
 
       def internal_eval_token
         if md=@chunk.match(INTERNAL_EVAL)
-          result = process_internal_eval @chunk[md.length..-1]
+          consumed = 0
+          substr = if md[1]                               # begins with !
+            consumed = md[1].length
+            @chunk[consumed..-1]
+          elsif md[2]                                     # begins with a number
+            @chunk[consumed..-1]
+          end
+          result = process_internal_eval substr, consumed: consumed
           token :InternalEval, result.str
           return result.consumed_length
         end
@@ -178,7 +194,7 @@ module Yap
         end
       end
 
-      def process_internal_eval(input_str)
+      def process_internal_eval(input_str, consumed:0)
         scope = []
         words = []
         str = ''
@@ -186,7 +202,6 @@ module Yap
         i = 0
         loop do
           ch = input_str[i]
-
           popped = false
           if scope.last == ch
             scope.pop
@@ -196,7 +211,7 @@ module Yap
           if scope.empty? && md=input_str[i..-1].match(/\A(;|\||&&)/)
             return OpenStruct.new(str:str.strip, consumed_length:i)
           elsif (i == input_str.length)
-            return OpenStruct.new(str:str.strip, consumed_length:i+1)
+            return OpenStruct.new(str:str.strip, consumed_length:i+consumed)
           else
             if !popped
               if %w(' ").include?(ch)

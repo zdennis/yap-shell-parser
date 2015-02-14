@@ -9,7 +9,7 @@ module Yap
   module Line
     class MyParser < Racc::Parser
 
-module_eval(<<'...end grammar.y/module_eval...', 'grammar.y', 56)
+module_eval(<<'...end grammar.y/module_eval...', 'grammar.y', 60)
 
   def parse(str)
     @q = Yap::Line::Lexer.new.tokenize(str)
@@ -28,36 +28,36 @@ puts "---- parse tree follows ----"
 ##### State transition tables begin ###
 
 racc_action_table = [
-     9,     9,     9,     9,     9,    17,    16,    13,     7,     7,
-     7,     7,     7,    11,    12,    11,    10,    21,    22,    12,
-    13 ]
+    10,    10,    10,    10,    11,    11,    11,    11,     7,     7,
+     7,     7,    10,    13,    19,    18,    11,    23,    15,    14,
+     7,    13,    12,    24,    14,    15 ]
 
 racc_action_check = [
-     0,     7,    13,    11,    12,    10,     9,     5,     0,     7,
-    13,    11,    12,    14,     4,     3,     1,    14,    15,    18,
-    19 ]
+     0,     7,    15,    13,     0,     7,    15,    13,     0,     7,
+    15,    13,    14,    16,    12,    10,    14,    16,     5,     4,
+    14,     3,     1,    17,    20,    21 ]
 
 racc_action_pointer = [
-    -2,    16,   nil,     8,     6,    -2,   nil,    -1,   nil,     2,
-     5,     1,     2,     0,     6,    14,   nil,   nil,    11,    11,
-   nil,   nil,   nil ]
+    -2,    22,   nil,    14,    11,     9,   nil,    -1,   nil,   nil,
+    11,   nil,    14,     1,    10,     0,     6,    19,   nil,   nil,
+    16,    16,   nil,   nil,   nil ]
 
 racc_action_default = [
-   -15,   -15,    -1,    -2,    -4,    -6,    -8,   -15,   -10,   -11,
-   -15,   -15,   -15,   -15,   -15,   -12,   -13,    23,    -3,    -5,
-    -7,    -9,   -14 ]
+   -17,   -17,    -1,    -2,    -4,    -6,    -8,   -17,   -10,   -11,
+   -12,   -16,   -17,   -17,   -17,   -17,   -17,   -13,   -14,    25,
+    -3,    -5,    -7,    -9,   -15 ]
 
 racc_goto_table = [
-     3,    18,     1,     2,    19,    20,    15,    14 ]
+     3,    20,     1,     2,    21,    22,    17,    16 ]
 
 racc_goto_check = [
-     3,     4,     1,     2,     5,     6,     8,     3 ]
+     3,     4,     1,     2,     5,     6,     9,     3 ]
 
 racc_goto_pointer = [
-   nil,     2,     3,     0,   -10,    -8,    -8,   nil,    -3 ]
+   nil,     2,     3,     0,   -12,   -10,   -10,   nil,   nil,    -4 ]
 
 racc_goto_default = [
-   nil,   nil,   nil,   nil,     4,     5,     6,     8,   nil ]
+   nil,   nil,   nil,   nil,     4,     5,     6,     8,     9,   nil ]
 
 racc_reduce_table = [
   0, 0, :racc_error,
@@ -71,14 +71,16 @@ racc_reduce_table = [
   1, 17, :_reduce_none,
   3, 18, :_reduce_9,
   1, 18, :_reduce_none,
-  1, 19, :_reduce_11,
-  2, 19, :_reduce_12,
-  1, 20, :_reduce_13,
-  2, 20, :_reduce_14 ]
+  1, 18, :_reduce_none,
+  1, 19, :_reduce_12,
+  2, 19, :_reduce_13,
+  1, 21, :_reduce_14,
+  2, 21, :_reduce_15,
+  1, 20, :_reduce_16 ]
 
-racc_reduce_n = 15
+racc_reduce_n = 17
 
-racc_shift_n = 23
+racc_shift_n = 25
 
 racc_token_table = {
   false => 0,
@@ -135,9 +137,10 @@ Racc_token_to_s_table = [
   "pipeline",
   "stmts2",
   "command",
+  "internal_eval",
   "args" ]
 
-Racc_debug_parser = true
+Racc_debug_parser = false
 
 ##### State transition tables end #####
 
@@ -188,29 +191,38 @@ module_eval(<<'.,.,', 'grammar.y', 39)
 
 # reduce 10 omitted
 
-module_eval(<<'.,.,', 'grammar.y', 44)
-  def _reduce_11(val, _values, result)
+# reduce 11 omitted
+
+module_eval(<<'.,.,', 'grammar.y', 45)
+  def _reduce_12(val, _values, result)
      result = val 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 46)
-  def _reduce_12(val, _values, result)
+module_eval(<<'.,.,', 'grammar.y', 47)
+  def _reduce_13(val, _values, result)
      result = [val[0], val[1]].flatten 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 49)
-  def _reduce_13(val, _values, result)
+module_eval(<<'.,.,', 'grammar.y', 50)
+  def _reduce_14(val, _values, result)
      result = [val[0]]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 51)
-  def _reduce_14(val, _values, result)
+module_eval(<<'.,.,', 'grammar.y', 52)
+  def _reduce_15(val, _values, result)
+     result = val 
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'grammar.y', 55)
+  def _reduce_16(val, _values, result)
      result = val 
     result
   end
@@ -241,6 +253,11 @@ if $0 == __FILE__
   src = "( foo )"
   src = "( foo a b && bar c d )"
   src = "( foo a b && (bar c d | baz e f))"
+  src = "((((foo))))"
+  src = "foo -b -c ; (this ;that ;the; other  ;thing) && yep"
+  src = "foo -b -c ; (this ;that && other  ;thing) && yep"
+  src = "4 + 5"
+  src = "!ruby code here ; echo && 4 + 5"
   puts 'parsing:'
   print src
   puts

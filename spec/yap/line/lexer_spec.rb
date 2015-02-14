@@ -36,10 +36,17 @@ describe Yap::Line::Lexer do
       ]}
     end
 
-    describe "can end with periods: .core" do
+    describe "can end with periods: core." do
       let(:str){ "core." }
       it { should eq [
         t(:Command, "core.", lineno:0)
+      ]}
+    end
+
+    describe "can contain a number: ab4cd" do
+      let(:str){ "ab4cd" }
+      it { should eq [
+        t(:Command, "ab4cd", lineno:0)
       ]}
     end
   end
@@ -272,6 +279,20 @@ describe Yap::Line::Lexer do
   end
 
   context "internal evaluations" do
+    describe "can begin with a number: 4" do
+      let(:str){ "4" }
+      it { should eq [
+        t(:InternalEval, "4", lineno:0)
+      ]}
+    end
+
+    describe "can have arguments: 4 + 6" do
+      let(:str){ "4 + 6" }
+      it { should eq [
+        t(:InternalEval, "4 + 6", lineno:0)
+      ]}
+    end
+
     describe "started by a exclamation point: !to_s" do
       let(:str){ "!to_s" }
       it { should eq [

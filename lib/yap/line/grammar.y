@@ -39,6 +39,7 @@ pipeline : pipeline Pipe stmts2
 stmts2 : '(' expr ')'
     { result = val[0], *val[1], val[2] }
   | command
+  | internal_eval
 
 
 command : Command
@@ -49,6 +50,9 @@ command : Command
 args : Argument
     { result = [val[0]]}
   | args Argument
+    { result = val }
+
+internal_eval : InternalEval
     { result = val }
 
 
@@ -85,6 +89,11 @@ if $0 == __FILE__
   src = "( foo )"
   src = "( foo a b && bar c d )"
   src = "( foo a b && (bar c d | baz e f))"
+  src = "((((foo))))"
+  src = "foo -b -c ; (this ;that ;the; other  ;thing) && yep"
+  src = "foo -b -c ; (this ;that && other  ;thing) && yep"
+  src = "4 + 5"
+  src = "!ruby code here ; echo && 4 + 5"
   puts 'parsing:'
   print src
   puts
