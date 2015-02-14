@@ -142,7 +142,7 @@ Racc_token_to_s_table = [
   "$start",
   "program",
   "stmts",
-  "expr",
+  "stmt",
   "pipeline",
   "stmts2",
   "command",
@@ -160,21 +160,21 @@ Racc_debug_parser = true
 
 module_eval(<<'.,.,', 'grammar.y', 23)
   def _reduce_2(val, _values, result)
-     result = Statements.new(val[0], val[2]) 
+     result = StatementsNode.new(val[0], val[2]) 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'grammar.y', 25)
   def _reduce_3(val, _values, result)
-     result = val 
+     result = StatementsNode.new(val[0]) 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'grammar.y', 28)
   def _reduce_4(val, _values, result)
-     result = Conditional.new(val[1].value, val[0], val[2]) 
+     result = ConditionalNode.new(val[1].value, val[0], val[2]) 
     result
   end
 .,.,
@@ -183,7 +183,7 @@ module_eval(<<'.,.,', 'grammar.y', 28)
 
 module_eval(<<'.,.,', 'grammar.y', 32)
   def _reduce_6(val, _values, result)
-     result = val[1], val[0], val[2] 
+     result = PipelineNode.new(val[0], val[2]) 
     result
   end
 .,.,
@@ -203,7 +203,7 @@ module_eval(<<'.,.,', 'grammar.y', 36)
 
 module_eval(<<'.,.,', 'grammar.y', 41)
   def _reduce_11(val, _values, result)
-     val[0].heredoc = val[1] ; result = val[0] 
+     val[0].heredoc = val[1].value ; result = val[0] 
     result
   end
 .,.,
@@ -212,28 +212,28 @@ module_eval(<<'.,.,', 'grammar.y', 41)
 
 module_eval(<<'.,.,', 'grammar.y', 45)
   def _reduce_13(val, _values, result)
-     result = Command.new(val[0].value) 
+     result = CommandNode.new(val[0].value) 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'grammar.y', 47)
   def _reduce_14(val, _values, result)
-     result = Command.new(val[0].value, val[1].flatten) 
+     result = CommandNode.new(val[0].value, val[1].flatten) 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'grammar.y', 49)
   def _reduce_15(val, _values, result)
-     result = Command.new(val[0].value, literal:true) 
+     result = CommandNode.new(val[0].value, literal:true) 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'grammar.y', 51)
   def _reduce_16(val, _values, result)
-     result = Command.new(val[0].value, val[1].flatten, literal:true) 
+     result = CommandNode.new(val[0].value, val[1].flatten, literal:true) 
     result
   end
 .,.,
@@ -254,7 +254,7 @@ module_eval(<<'.,.,', 'grammar.y', 57)
 
 module_eval(<<'.,.,', 'grammar.y', 60)
   def _reduce_19(val, _values, result)
-     result = val 
+     result = InternalEvalNode.new(val[0].value) 
     result
   end
 .,.,
@@ -269,56 +269,6 @@ end
 
 
 if $0 == __FILE__
-
-class Evaluator
-
-  def evaltree(tree)
-    result = 0
-    leftnode = tree[0]
-    if leftnode.is_a?(Array)
-      result = evaltree(leftnode)
-    elsif leftnode
-      puts leftnode.inspect
-      puts tree[1..-1].inspect
-      puts "--"
-      result = evalnode leftnode, tree[1..-1]
-    end
-
-    rightnode = tree[1]
-    if rightnode.is_a?(Array)
-      result = evaltree(rightnode)
-    elsif rightnode
-      puts rightnode.inspect
-      puts tree[1..-1].inspect
-      puts "--"
-      result = evalnode rightnode, tree[1..-1]
-    end
-    result
-  end
-
-  def evalnode(node, parts)
-    result = nil
-    puts "NODE: #{node.inspect}"
-    puts "PARTS: #{parts.inspect}"
-    case node.tag
-    when :InternalEval
-      result = eval node.value
-      puts "Eval'd: #{result}"
-    when :Separator
-      puts "no-op"
-    when :Conditional
-      result = evaltree(parts[0])
-      if result > 0
-        result = evaltree(parts[1])
-      end
-      puts "CEval'd: #{result}"
-    else
-      raise "Don't know how to evalnode: #{node.inspect}"
-    end
-    result
-  end
-end
-
 
   $LOAD_PATH.unshift File.dirname(__FILE__) + "/../../"
   require 'yap/line/lexer'
@@ -342,6 +292,8 @@ end
   src = "4 + 5"
   src = "!'hello' ; 4 - 4 && 10 + 3"
   src = "\\foo <<-EOT\nbar\nEOT"
+  src = "ls | grep md | grep WISH"
+  src = "(!upcase)"
   puts 'parsing:'
   print src
   puts
@@ -350,8 +302,8 @@ end
   ast = Yap::Line::MyParser.new.parse(src)
   pp ast
 
-  puts "---- Evaluating"
-    require 'pry'
-  binding.pry
+  # puts "---- Evaluating"
+  #   require 'pry'
+  # binding.pry
   # Evaluator.new.evaltree(ast)
 end

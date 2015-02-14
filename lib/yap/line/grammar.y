@@ -20,17 +20,17 @@ rule
 
 program : stmts
 
-stmts : stmts Separator expr
-    { result = Statements.new(val[0], val[2]) }
-  | expr
-    { result = val }
+stmts : stmts Separator stmt
+    { result = StatementsNode.new(val[0], val[2]) }
+  | stmt
+    { result = StatementsNode.new(val[0]) }
 
-expr : expr Conditional pipeline
-    { result = Conditional.new(val[1].value, val[0], val[2]) }
+stmt : stmt Conditional pipeline
+    { result = ConditionalNode.new(val[1].value, val[0], val[2]) }
   | pipeline
 
 pipeline : pipeline Pipe stmts2
-    { result = val[1], val[0], val[2] }
+    { result = PipelineNode.new(val[0], val[2]) }
   | stmts2
 
 stmts2 : '(' stmts ')'
@@ -39,17 +39,17 @@ stmts2 : '(' stmts ')'
   | internal_eval
 
 command : command2 Heredoc
-    { val[0].heredoc = val[1] ; result = val[0] }
+    { val[0].heredoc = val[1].value ; result = val[0] }
   | command2
 
 command2: Command
-    { result = Command.new(val[0].value) }
+    { result = CommandNode.new(val[0].value) }
   | Command args
-    { result = Command.new(val[0].value, val[1].flatten) }
+    { result = CommandNode.new(val[0].value, val[1].flatten) }
   | LiteralCommand
-    { result = Command.new(val[0].value, literal:true) }
+    { result = CommandNode.new(val[0].value, literal:true) }
   | LiteralCommand args
-    { result = Command.new(val[0].value, val[1].flatten, literal:true) }
+    { result = CommandNode.new(val[0].value, val[1].flatten, literal:true) }
 
 
 args : Argument
@@ -58,7 +58,7 @@ args : Argument
     { result = [val[0], val[1].value] }
 
 internal_eval : InternalEval
-    { result = val }
+    { result = InternalEvalNode.new(val[0].value) }
 
 
 ---- inner
@@ -85,56 +85,6 @@ puts "---- parse tree follows ----"
 
 if $0 == __FILE__
 
-class Evaluator
-
-  def evaltree(tree)
-    result = 0
-    leftnode = tree[0]
-    if leftnode.is_a?(Array)
-      result = evaltree(leftnode)
-    elsif leftnode
-      puts leftnode.inspect
-      puts tree[1..-1].inspect
-      puts "--"
-      result = evalnode leftnode, tree[1..-1]
-    end
-
-    rightnode = tree[1]
-    if rightnode.is_a?(Array)
-      result = evaltree(rightnode)
-    elsif rightnode
-      puts rightnode.inspect
-      puts tree[1..-1].inspect
-      puts "--"
-      result = evalnode rightnode, tree[1..-1]
-    end
-    result
-  end
-
-  def evalnode(node, parts)
-    result = nil
-    puts "NODE: #{node.inspect}"
-    puts "PARTS: #{parts.inspect}"
-    case node.tag
-    when :InternalEval
-      result = eval node.value
-      puts "Eval'd: #{result}"
-    when :Separator
-      puts "no-op"
-    when :Conditional
-      result = evaltree(parts[0])
-      if result > 0
-        result = evaltree(parts[1])
-      end
-      puts "CEval'd: #{result}"
-    else
-      raise "Don't know how to evalnode: #{node.inspect}"
-    end
-    result
-  end
-end
-
-
   $LOAD_PATH.unshift File.dirname(__FILE__) + "/../../"
   require 'yap/line/lexer'
   require 'yap/line/nodes'
@@ -157,6 +107,8 @@ end
   src = "4 + 5"
   src = "!'hello' ; 4 - 4 && 10 + 3"
   src = "\\foo <<-EOT\nbar\nEOT"
+  src = "ls | grep md | grep WISH"
+  src = "(!upcase)"
   puts 'parsing:'
   print src
   puts
@@ -165,8 +117,8 @@ end
   ast = Yap::Line::MyParser.new.parse(src)
   pp ast
 
-  puts "---- Evaluating"
-    require 'pry'
-  binding.pry
+  # puts "---- Evaluating"
+  #   require 'pry'
+  # binding.pry
   # Evaluator.new.evaltree(ast)
 end
