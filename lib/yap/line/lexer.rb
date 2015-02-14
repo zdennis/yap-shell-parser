@@ -41,7 +41,7 @@ module Yap
       STATEMENT_TERMINATOR   = /\A(;)/
       PIPE_TERMINATOR        = /\A(\|)/
       CONDITIONAL_TERMINATOR = /\A(&&|\|\|)/
-      HEREDOC_START          = /\A<<([A-z0-9]+)/
+      HEREDOC                = /\A<<-?([A-z0-9]+)\s*^(.*)?(^\s*\1\s*$)/m
       INTERNAL_EVAL          = /\A(?:(\!)|([0-9]+))/
       SUBGROUP               = /\A(\(|\))/
 
@@ -106,10 +106,9 @@ module Yap
         end
       end
 
-
       def heredoc_token
-        if md=@chunk.match(HEREDOC_START)
-          token :Heredoc, md[1]
+        if md=@chunk.match(HEREDOC)
+          token :Heredoc, md[2]
           md[0].length
         end
       end

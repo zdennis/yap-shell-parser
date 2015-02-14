@@ -245,36 +245,75 @@ describe Yap::Line::Lexer do
   end
 
   context "heredocs" do
-    describe "started by starting with double arrows followed by a character: foo <<E" do
-      let(:str){ "foo <<E"}
+    describe "started with double arrows followed by a character: foo <<E" do
+      let(:str){ "foo <<E\nfoo\nbar\nE" }
       it { should eq [
         t(:Command, "foo", lineno:0),
-        t(:Heredoc, "E", lineno:0)
+        t(:Heredoc, "foo\nbar\n", lineno:0)
       ]}
     end
 
-    describe "started by starting with double arrows followed by multiple character: foo <<FOO" do
-      let(:str){ "foo <<FOO"}
+    describe "started with double arrows followed by multiple character: foo <<FOO" do
+      let(:str){ "foo <<FOO\nhere\nwe\ngo\nFOO"}
       it { should eq [
         t(:Command, "foo", lineno:0),
-        t(:Heredoc, "FOO", lineno:0)
+        t(:Heredoc, "here\nwe\ngo\n", lineno:0)
       ]}
     end
 
-    describe "started by starting with double arrows followed by numbers characters: foo <<FOO" do
-      let(:str){ "foo <<12"}
+    describe "started with double arrows followed by numbers characters: foo <<12" do
+      let(:str){ "foo <<12\nnumbers\nman\n12" }
       it { should eq [
         t(:Command, "foo", lineno:0),
-        t(:Heredoc, "12", lineno:0)
+        t(:Heredoc, "numbers\nman\n", lineno:0)
       ]}
     end
 
-    describe "started by starting with double arrows followed by a mixture of alphanumeric characters: foo <<L337" do
-      let(:str){ "foo <<L337"}
+    describe "started with double arrows followed by a mixture of alphanumeric characters: foo <<L337" do
+      let(:str){ "foo <<L337\nhere\nwe\ngo\nL337"}
       it { should eq [
         t(:Command, "foo", lineno:0),
-        t(:Heredoc, "L337", lineno:0)
+        t(:Heredoc, "here\nwe\ngo\n", lineno:0)
       ]}
+    end
+
+    describe "started with a <<-: foo <<-L337" do
+      let(:str){ "foo <<-L337\nhere\nwe\ngo\nL337"}
+      it { should eq [
+        t(:Command, "foo", lineno:0),
+        t(:Heredoc, "here\nwe\ngo\n", lineno:0)
+      ]}
+    end
+
+    describe "the ending line can have leading whitespace which isn't consumed" do
+      let(:str){ "foo <<L337\nhere\nwe\ngo\n   \t  L337"}
+      it { should eq [
+        t(:Command, "foo", lineno:0),
+        t(:Heredoc, "here\nwe\ngo\n", lineno:0)
+      ]}
+    end
+
+    describe "the ending line can have trailing whitespace which isn't consumed" do
+      let(:str){ "foo <<L337\nhere\nwe\ngo\nL337     \t "}
+      it { should eq [
+        t(:Command, "foo", lineno:0),
+        t(:Heredoc, "here\nwe\ngo\n", lineno:0)
+      ]}
+    end
+
+    describe "the ending line can be followed by a newline" do
+      let(:str){ "foo <<L337\nhere\nwe\ngo\nL337\n"}
+      it { should eq [
+        t(:Command, "foo", lineno:0),
+        t(:Heredoc, "here\nwe\ngo\n", lineno:0)
+      ]}
+    end
+
+    describe "the ending line cannot have non-whitespace characters beyond the delimiter" do
+      let(:str){ "foo <<L337\nhere\nwe\ngo\n this is bad L337"}
+      it "raises an error" do
+        expect{ subject }.to raise_error
+      end
     end
   end
 
