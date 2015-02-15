@@ -56,6 +56,13 @@ describe Yap::Line::Lexer do
         t(:Command, "foo/bar", lineno:0)
       ]}
     end
+
+    describe "can contain asterisks: foo/ba*" do
+      let(:str){ "foo/ba*" }
+      it { should eq [
+        t(:Command, "foo/ba*", lineno:0)
+      ]}
+    end
   end
 
   describe "literal commands" do
@@ -106,6 +113,15 @@ describe Yap::Line::Lexer do
         t(:Argument, "foo", lineno:0),
         t(:Argument, "bar", lineno:0),
         t(:Argument, "-baz", lineno:0)
+      ]}
+    end
+
+    describe "can contain asterisks: ls foo* b*r" do
+      let(:str){ "ls foo* b*r" }
+      it { should eq [
+        t(:Command, "ls", lineno:0),
+        t(:Argument, "foo*", lineno:0),
+        t(:Argument, "b*r", lineno:0),
       ]}
     end
 

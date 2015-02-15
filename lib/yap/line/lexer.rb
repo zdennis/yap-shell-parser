@@ -38,7 +38,7 @@ module Yap
       COMMAND                = /\A(#{ARG})/
       LITERAL_COMMAND        = /\A\\(#{ARG})/
       WHITESPACE             = /\A[^\n\S]+/
-      ARGUMENT               = /\A([\$\-A-z_\.0-9'"=]+)/
+      ARGUMENT               = /\A(#{ARG}+)/
       STATEMENT_TERMINATOR   = /\A(;)/
       PIPE_TERMINATOR        = /\A(\|)/
       CONDITIONAL_TERMINATOR = /\A(&&|\|\|)/
