@@ -79,8 +79,8 @@ internal_eval : InternalEval
   def parse(str)
     @q = Yap::Line::Lexer.new.tokenize(str)
     # @q.push [false, '$']   # is optional from Racc 1.3.7
-puts @q.inspect
-puts "---- parse tree follows ----"
+# puts @q.inspect
+# puts "---- parse tree follows ----"
     __send__(Racc_Main_Parsing_Routine, _racc_setup(), false)
     #do_parse
   end
