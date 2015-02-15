@@ -3,7 +3,7 @@
 # convert Array-like string into Ruby's Array.
 
 class Yap::Line::MyParser
-  token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe
+  token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe Redirection
   #
   # prechigh
   # #   left '**' '*' '/' '%'
@@ -35,8 +35,17 @@ pipeline : pipeline Pipe stmts2
 
 stmts2 : '(' stmts ')'
     { result = val[1] }
-  | command
+  | command_w_redirects
   | internal_eval
+
+command_w_heredoc : command_w_redirects Heredoc
+  | command_w_redirects
+
+command_w_redirects : command_w_redirects Redirection
+    { val[0].redirects << RedirectionNode.new(val[1].value, val[1].attrs[:target]) ; result = val[0] }
+  | command Redirection
+    { val[0].redirects << RedirectionNode.new(val[1].value, val[1].attrs[:target]) ; result = val[0] }
+  | command
 
 command : command2 Heredoc
     { val[0].heredoc = val[1].value ; result = val[0] }
@@ -50,7 +59,6 @@ command2: Command
     { result = CommandNode.new(val[0].value, literal:true) }
   | LiteralCommand args
     { result = CommandNode.new(val[0].value, val[1].flatten, literal:true) }
-
 
 args : Argument
     { result = [val[0].value] }
@@ -109,6 +117,8 @@ if $0 == __FILE__
   src = "\\foo <<-EOT\nbar\nEOT"
   src = "ls | grep md | grep WISH"
   src = "(!upcase)"
+  src = "echo foo > bar.txt"
+  src = "ls -l > a.txt ; echo f 2> b.txt ; cat b &> c.txt ; du -sh 1>&2 1>hey.txt"
   puts 'parsing:'
   print src
   puts

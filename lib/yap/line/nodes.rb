@@ -12,13 +12,14 @@ module Yap
         include Visitor
 
         attr_reader :command, :args
-        attr_accessor :heredoc
+        attr_accessor :heredoc, :redirects
 
         def initialize(command, *args, literal:false, heredoc:nil)
           @command = command
           @args = args.flatten
           @literal = literal
           @heredoc = nil
+          @redirects = []
         end
 
         def literal?
@@ -30,7 +31,7 @@ module Yap
         end
 
         def to_s
-          "CommandNode(#{@command}, args: #{@args}, literal:#{literal?}, heredoc: #{heredoc?})"
+          "CommandNode(#{@command}, args: #{@args}, literal:#{literal?}, heredoc: #{heredoc?}, redirects: #{redirects})"
         end
 
         def inspect
@@ -52,9 +53,7 @@ module Yap
           <<-EOT.gsub(/^\s+\|/, '')
             |  #{' ' * indent}StatementsNode(
             |  #{' ' * indent}  #{@head.to_s},
-            |  #{' ' * indent}  #{@tail.to_s}
-            |  #{' ' * indent}
-            )
+            |  #{' ' * indent}  #{@tail.to_s})
           EOT
         end
 
@@ -107,10 +106,27 @@ module Yap
           <<-EOT.gsub(/^\s+\|/, '')
             |  #{' ' * indent}PipelineNode(
             |  #{' ' * indent}  #{@head.to_s},
-            |  #{' ' * indent}  #{@tail.to_s}
-            |  #{' ' * indent}
-            )
+            |  #{' ' * indent}  #{@tail.to_s})
           EOT
+        end
+
+        def inspect
+          to_s
+        end
+      end
+
+      class RedirectionNode
+        include Visitor
+
+        attr_reader :head, :tail
+
+        def initialize(redirection, target)
+          @redirection = redirection
+          @target = target
+        end
+
+        def to_s(indent:0)
+          "RedirectionNode(#{@redirection.to_s}, #{@target.to_s})"
         end
 
         def inspect

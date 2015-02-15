@@ -12,7 +12,7 @@ module Yap
           @tag = tag
           @value = value
           @lineno = lineno
-          @attrs = @attrs
+          @attrs = attrs
         end
 
         def <=>(other)
@@ -22,11 +22,11 @@ module Yap
         end
 
         def inspect
-          "#{tag.inspect} '#{value}'"
+          "#{tag.inspect} '#{value}' #{attrs.inspect}"
         end
 
         def to_s
-          "Token(#{tag.inspect} #{value.inspect} on #{lineno})"
+          "Token(#{tag.inspect} #{value.inspect} on #{lineno} with #{attrs.inspect})"
         end
 
         def length
@@ -34,8 +34,9 @@ module Yap
         end
       end
 
-      COMMAND                = /\A([A-Za-z_\.]+[A-Za-z_0-9\.\/\/]*)/
-      LITERAL_COMMAND        = /\A\\([A-Za-z_\.\/]+[A-Za-z_0-9\.\/]*)/
+      ARG                    = /[^0-9\s;\|\(\)\{\}\[\]\&\!\\][^\s;\|\(\)\{\}\[\]\&\!\>]*/
+      COMMAND                = /\A(#{ARG})/
+      LITERAL_COMMAND        = /\A\\(#{ARG})/
       WHITESPACE             = /\A[^\n\S]+/
       ARGUMENT               = /\A([\$\-A-z_\.0-9'"=]+)/
       STATEMENT_TERMINATOR   = /\A(;)/
@@ -44,6 +45,8 @@ module Yap
       HEREDOC                = /\A<<-?([A-z0-9]+)\s*^(.*)?(^\s*\1\s*$)/m
       INTERNAL_EVAL          = /\A(?:(\!)|([0-9]+))/
       SUBGROUP               = /\A(\(|\))/
+      REDIRECTION            = /\A(([12]?>&?[12]?)\s*(#{ARG})?)/
+      REDIRECTION2           = /\A((&>)\s*(#{ARG}))/
 
       def tokenize(str)
         @str = str
@@ -58,10 +61,11 @@ module Yap
 
         while process_next_chunk.call
           result = subgroup_token ||
-            command_token ||
             literal_command_token ||
+            command_token ||
             whitespace_token ||
             terminator_token ||
+            redirection_token ||
             heredoc_token ||
             string_argument_token ||
             argument_token ||
@@ -125,6 +129,18 @@ module Yap
           result = process_internal_eval substr, consumed: consumed
           token :InternalEval, result.str
           return result.consumed_length
+        end
+      end
+
+      def redirection_token
+        if md=@chunk.match(REDIRECTION)
+          target = nil
+          target = md[3] if md[3] && md[3].length > 0
+          token :Redirection, md[2], attrs: { target: target }
+          md[0].length
+        elsif md=@chunk.match(REDIRECTION2)
+          token :Redirection, md[2], attrs: { target: md[3] }
+          md[0].length
         end
       end
 

@@ -459,4 +459,140 @@ describe Yap::Line::Lexer do
     end
   end
 
+  describe "redirections" do
+    describe "stdout" do
+      describe "can come after the command with no spaces" do
+        let(:str){ "foo>bar.txt" }
+        it { should eq [
+          t(:Command, "foo", lineno: 0),
+          t(:Redirection, ">", lineno: 0, attrs: { target: "bar.txt" }),
+        ]}
+      end
+
+      describe "can come after the command with spaces after the command" do
+        let(:str){ "foo >bar.txt" }
+        it { should eq [
+          t(:Command, "foo", lineno: 0),
+          t(:Redirection, ">", lineno: 0, attrs: { target: "bar.txt" }),
+        ]}
+      end
+
+      describe "can come after the command with spaces after the redirect" do
+        let(:str){ "foo > bar.txt" }
+        it { should eq [
+          t(:Command, "foo", lineno: 0),
+          t(:Redirection, ">", lineno: 0, attrs: { target: "bar.txt" }),
+        ]}
+      end
+
+      describe "can be specified numerically: 1>" do
+        let(:str){ "foo 1> bar.txt" }
+        it { should eq [
+          t(:Command, "foo", lineno: 0),
+          t(:Redirection, "1>", lineno: 0, attrs: { target: "bar.txt" }),
+        ]}
+      end
+
+      describe "can come after command arguments" do
+        let(:str){ "ls -al > a.txt" }
+        it { should eq [
+          t(:Command, "ls", lineno: 0),
+          t(:Argument, "-al", lineno: 0),
+          t(:Redirection, ">", lineno: 0, attrs: { target: "a.txt" }),
+        ]}
+      end
+
+    end
+
+    describe "stderr" do
+      describe "without spaces after the command it cannot be redirected" do
+        let(:str){ "foo2>bar.txt" }
+        it { should eq [
+          t(:Command, "foo2", lineno: 0),
+          t(:Redirection, ">", lineno: 0, attrs: { target: "bar.txt" }),
+        ]}
+      end
+
+      describe "it comes after the command with spaces after the command" do
+        let(:str){ "foo 2>bar.txt" }
+        it { should eq [
+          t(:Command, "foo", lineno: 0),
+          t(:Redirection, "2>", lineno: 0, attrs: { target: "bar.txt" }),
+        ]}
+      end
+
+      describe "it comes after the command with spaces after the redirect" do
+        let(:str){ "foo 2> bar.txt" }
+        it { should eq [
+          t(:Command, "foo", lineno: 0),
+          t(:Redirection, "2>", lineno: 0, attrs: { target: "bar.txt" }),
+        ]}
+      end
+    end
+
+    describe "stdout / stderr" do
+      describe "stdout redirecting to stderr: foo 1>&2" do
+        let(:str){ "foo 1>&2" }
+        it { should eq [
+          t(:Command, "foo", lineno: 0),
+          t(:Redirection, "1>&2", lineno: 0, attrs: { target: nil }),
+        ]}
+      end
+
+      describe "stderr redirecting to stdout: foo 2>&1" do
+        let(:str){ "foo 2>&1" }
+        it { should eq [
+          t(:Command, "foo", lineno: 0),
+          t(:Redirection, "2>&1", lineno: 0, attrs: { target: nil }),
+        ]}
+      end
+
+      describe "stdout redirecting to stderr with a file: foo 1>&2 bar.txt (bash incompatible)" do
+        let(:str){ "foo 1>&2 bar.txt" }
+        it { should eq [
+          t(:Command, "foo", lineno: 0),
+          # TODO: This is bash incompatible. Keep it?
+          t(:Redirection, "1>&2", lineno: 0, attrs: { target: "bar.txt" })
+        ]}
+      end
+
+      describe "stderr redirecting to stdout with a file: foo 2>&1 bar.txt (bash incompatible)" do
+        let(:str){ "foo 2>&1 bar.txt" }
+        it { should eq [
+          t(:Command, "foo", lineno: 0),
+          # TODO: This is bash incompatible. Keep it?
+          t(:Redirection, "2>&1", lineno: 0, attrs: { target: "bar.txt" })
+        ]}
+      end
+
+      describe "stdout and stderr redirecting to a file together: foo &> /dev/null" do
+        let(:str){ "foo &> /dev/null" }
+        it { should eq [
+          t(:Command, "foo", lineno: 0),
+          t(:Redirection, "&>", lineno: 0, attrs: { target: "/dev/null" })
+        ]}
+      end
+
+      describe "stdout and sdterr redirecting separately: foo 2> err.txt 1> out.txt" do
+        let(:str){ "foo 2> err.txt 1> out.txt" }
+        it { should eq [
+          t(:Command, "foo", lineno: 0),
+          t(:Redirection, "2>", lineno: 0, attrs: { target: "err.txt" }),
+          t(:Redirection, "1>", lineno: 0, attrs: { target: "out.txt" })
+        ]}
+      end
+
+      describe "stdout and sdterr redirecting separately: du -sh 1>&2 1>hey.txt" do
+        let(:str){ "du -sh 2>&1 1>hey.txt" }
+        it { should eq [
+          t(:Command, "du", lineno: 0),
+          t(:Argument, "-sh", lineno: 0),
+          t(:Redirection, "2>&1", lineno: 0, attrs: { target: nil }),
+          t(:Redirection, "1>", lineno: 0, attrs: { target: "hey.txt" })
+        ]}
+      end
+    end
+
+  end
+
 end
