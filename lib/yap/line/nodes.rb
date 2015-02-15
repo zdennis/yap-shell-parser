@@ -118,15 +118,15 @@ module Yap
       class RedirectionNode
         include Visitor
 
-        attr_reader :head, :tail
+        attr_reader :kind, :target
 
-        def initialize(redirection, target)
-          @redirection = redirection
+        def initialize(kind, target)
+          @kind = kind
           @target = target
         end
 
         def to_s(indent:0)
-          "RedirectionNode(#{@redirection.to_s}, #{@target.to_s})"
+          "RedirectionNode(#{@kind.to_s}, #{@target.to_s})"
         end
 
         def inspect

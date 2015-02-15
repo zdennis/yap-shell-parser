@@ -460,6 +460,41 @@ describe Yap::Line::Lexer do
   end
 
   describe "redirections" do
+    describe "stdin" do
+      describe "can come after the command with no spaces" do
+        let(:str){ "foo<bar.txt" }
+        it { should eq [
+          t(:Command, "foo", lineno: 0),
+          t(:Redirection, "<", lineno: 0, attrs: { target: "bar.txt" }),
+        ]}
+      end
+
+      describe "can come after the command with spaces after the command" do
+        let(:str){ "foo <bar.txt" }
+        it { should eq [
+          t(:Command, "foo", lineno: 0),
+          t(:Redirection, "<", lineno: 0, attrs: { target: "bar.txt" }),
+        ]}
+      end
+
+      describe "can come after the command with spaces after the redirect" do
+        let(:str){ "foo < /path/to/bar.txt" }
+        it { should eq [
+          t(:Command, "foo", lineno: 0),
+          t(:Redirection, "<", lineno: 0, attrs: { target: "/path/to/bar.txt" }),
+        ]}
+      end
+
+      describe "can come after command arguments" do
+        let(:str){ "ls -al < a.txt" }
+        it { should eq [
+          t(:Command, "ls", lineno: 0),
+          t(:Argument, "-al", lineno: 0),
+          t(:Redirection, "<", lineno: 0, attrs: { target: "a.txt" }),
+        ]}
+      end
+    end
+
     describe "stdout" do
       describe "can come after the command with no spaces" do
         let(:str){ "foo>bar.txt" }
@@ -501,7 +536,6 @@ describe Yap::Line::Lexer do
           t(:Redirection, ">", lineno: 0, attrs: { target: "a.txt" }),
         ]}
       end
-
     end
 
     describe "stderr" do

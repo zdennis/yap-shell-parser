@@ -34,7 +34,7 @@ module Yap
         end
       end
 
-      ARG                    = /[^0-9\s;\|\(\)\{\}\[\]\&\!\\][^\s;\|\(\)\{\}\[\]\&\!\>]*/
+      ARG                    = /[^0-9\s;\|\(\)\{\}\[\]\&\!\\\<][^\s;\|\(\)\{\}\[\]\&\!\>\<]*/
       COMMAND                = /\A(#{ARG})/
       LITERAL_COMMAND        = /\A\\(#{ARG})/
       WHITESPACE             = /\A[^\n\S]+/
@@ -46,7 +46,7 @@ module Yap
       INTERNAL_EVAL          = /\A(?:(\!)|([0-9]+))/
       SUBGROUP               = /\A(\(|\))/
       REDIRECTION            = /\A(([12]?>&?[12]?)\s*(#{ARG})?)/
-      REDIRECTION2           = /\A((&>)\s*(#{ARG}))/
+      REDIRECTION2           = /\A((&>|<)\s*(#{ARG}))/
 
       def tokenize(str)
         @str = str
