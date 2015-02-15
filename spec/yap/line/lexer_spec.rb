@@ -348,24 +348,17 @@ describe Yap::Line::Lexer do
   end
 
   context "internal evaluations" do
-    describe "can begin with a number: 4" do
-      let(:str){ "4" }
-      it { should eq [
-        t(:InternalEval, "4", lineno:0)
-      ]}
-    end
-
-    describe "can have arguments: 4 + 6" do
-      let(:str){ "4 + 6" }
-      it { should eq [
-        t(:InternalEval, "4 + 6", lineno:0)
-      ]}
-    end
-
     describe "started by a exclamation point: !to_s" do
       let(:str){ "!to_s" }
       it { should eq [
         t(:InternalEval, "to_s", lineno:0)
+      ]}
+    end
+
+    describe "keeps strings" do
+      let(:str){ "!Dir.chdir('..')" }
+      it { should eq [
+        t(:InternalEval, "Dir.chdir('..')", lineno:0)
       ]}
     end
 
@@ -407,6 +400,16 @@ describe Yap::Line::Lexer do
         t(:Pipe, "|", lineno:0),
         t(:Command, "grep", lineno:0),
         t(:Argument, "fox", lineno:0)
+      ]}
+    end
+
+    describe "doesn't consume beyond a pipe terminator into other commands: !downcase | sleep 4" do
+      let(:str){ "!downcase | sleep 4" }
+      it { should eq [
+        t(:InternalEval, "downcase", lineno:0),
+        t(:Pipe, "|", lineno:0),
+        t(:Command, "sleep", lineno:0),
+        t(:Argument, "4", lineno:0)
       ]}
     end
 
@@ -477,7 +480,7 @@ describe Yap::Line::Lexer do
 
   describe "redirections" do
     describe "stdin" do
-      describe "can come after the command with no spaces" do
+      describe "can come after the command with no spaces: foo<bar.txt" do
         let(:str){ "foo<bar.txt" }
         it { should eq [
           t(:Command, "foo", lineno: 0),
@@ -485,7 +488,7 @@ describe Yap::Line::Lexer do
         ]}
       end
 
-      describe "can come after the command with spaces after the command" do
+      describe "can come after the command with spaces after the command: foo <bar.txt" do
         let(:str){ "foo <bar.txt" }
         it { should eq [
           t(:Command, "foo", lineno: 0),
@@ -493,7 +496,7 @@ describe Yap::Line::Lexer do
         ]}
       end
 
-      describe "can come after the command with spaces after the redirect" do
+      describe "can come after the command with spaces after the redirect: foo < /path/to/bar.txt" do
         let(:str){ "foo < /path/to/bar.txt" }
         it { should eq [
           t(:Command, "foo", lineno: 0),
@@ -501,7 +504,7 @@ describe Yap::Line::Lexer do
         ]}
       end
 
-      describe "can come after command arguments" do
+      describe "can come after command arguments: ls -al < a.txt" do
         let(:str){ "ls -al < a.txt" }
         it { should eq [
           t(:Command, "ls", lineno: 0),

@@ -30,6 +30,10 @@ module Yap
           @heredoc
         end
 
+        def internally_evaluate?
+          false
+        end
+
         def to_s
           "CommandNode(#{@command}, args: #{@args}, literal:#{literal?}, heredoc: #{heredoc?}, redirects: #{redirects})"
         end
@@ -82,14 +86,28 @@ module Yap
         include Visitor
 
         attr_reader :src
+        alias_method :command, :src
 
         def initialize(src)
           @src = src
         end
 
+        def args
+          nil
+        end
+
+        def heredoc
+          nil
+        end
+
         def internally_evaluate?
           true
         end
+
+        def to_s
+          "InternalEvalNode(#{@src.inspect})"
+        end
+
       end
 
       class PipelineNode

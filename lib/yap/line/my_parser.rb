@@ -329,6 +329,7 @@ if $0 == __FILE__
   src = "(!upcase)"
   src = "echo foo > bar.txt"
   src = "ls -l > a.txt ; echo f 2> b.txt ; cat b &> c.txt ; du -sh 1>&2 1>hey.txt"
+  src = "!Dir.chdir('..')"
   puts 'parsing:'
   print src
   puts

@@ -34,7 +34,7 @@ module Yap
         end
       end
 
-      ARG                    = /[^0-9\s;\|\(\)\{\}\[\]\&\!\\\<][^\s;\|\(\)\{\}\[\]\&\!\>\<]*/
+      ARG                    = /[^\s;\|\(\)\{\}\[\]\&\!\\\<][^\s;\|\(\)\{\}\[\]\&\!\>\<]*/
       COMMAND                = /\A(#{ARG})/
       LITERAL_COMMAND        = /\A\\(#{ARG})/
       WHITESPACE             = /\A[^\n\S]+/
@@ -45,7 +45,7 @@ module Yap
       HEREDOC                = /\A<<-?([A-z0-9]+)\s*^(.*)?(^\s*\1\s*$)/m
       INTERNAL_EVAL          = /\A(?:(\!)|([0-9]+))/
       SUBGROUP               = /\A(\(|\))/
-      REDIRECTION            = /\A(([12]?>&?[12]?)\s*(#{ARG})?)/
+      REDIRECTION            = /\A(([12]?>&?[12]?)\s*(?![12]>)(#{ARG})?)/
       REDIRECTION2           = /\A((&>|<)\s*(#{ARG}))/
 
       def tokenize(str)
@@ -224,6 +224,7 @@ module Yap
 
           elsif (i == input_str.length)
             return OpenStruct.new(str:str.strip, consumed_length:i+consumed)
+
           else
             if scope.last == ch
               scope.pop
