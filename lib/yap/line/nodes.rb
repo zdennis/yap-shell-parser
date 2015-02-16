@@ -96,7 +96,11 @@ module Yap
         attr_reader :head, :tail
 
         def initialize(head, tail=nil)
-          @head = head
+          if head.is_a?(StatementsNode) && head.tail.nil?
+            @head = head.head
+          else
+            @head = head
+          end
           @tail = tail
         end
 
