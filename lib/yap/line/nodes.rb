@@ -1,10 +1,27 @@
-
 module Yap
   module Line
     module Nodes
       module Visitor
         def accept(visitor, *args)
           visitor.send "visit_#{self.class.name.split("::").last}", self, *args
+        end
+      end
+
+      class AssignmentNode
+        include Visitor
+
+        attr_reader :lvalue, :rvalue
+
+        def initialize(lvalue, rvalue)
+          @lvalue, @rvalue = lvalue, rvalue
+        end
+
+        def inspect
+          to_s
+        end
+
+        def to_s
+          "A(#{lvalue.inspect}=#{rvalue.inspect})"
         end
       end
 
@@ -34,12 +51,27 @@ module Yap
           false
         end
 
+        def inspect
+          to_s
+        end
+
         def to_s
           "CommandNode(#{@command}, args: #{@args}, literal:#{literal?}, heredoc: #{heredoc?}, redirects: #{redirects})"
         end
+      end
 
-        def inspect
-          to_s
+      class EnvNode
+        include Visitor
+
+        attr_reader :env
+
+        def initialize(lvalue, rvalue)
+          @env = {}
+          @env[lvalue] = rvalue
+        end
+
+        def add_var(lvalue, rvalue)
+          @env[lvalue] = rvalue
         end
       end
 
@@ -107,7 +139,6 @@ module Yap
         def to_s
           "InternalEvalNode(#{@src.inspect})"
         end
-
       end
 
       class PipelineNode

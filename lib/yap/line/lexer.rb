@@ -39,6 +39,8 @@ module Yap
       LITERAL_COMMAND        = /\A\\(#{ARG})/
       WHITESPACE             = /\A[^\n\S]+/
       ARGUMENT               = /\A(#{ARG}+)/
+      LH_ASSIGNMENT          = /\A(([A-z_][\w]*)=)/
+      RH_VALUE               = /\A(\S+)/
       STATEMENT_TERMINATOR   = /\A(;)/
       PIPE_TERMINATOR        = /\A(\|)/
       CONDITIONAL_TERMINATOR = /\A(&&|\|\|)/
@@ -61,6 +63,7 @@ module Yap
 
         while process_next_chunk.call
           result = subgroup_token ||
+            assignment_token ||
             literal_command_token ||
             command_token ||
             whitespace_token ||
@@ -181,6 +184,25 @@ module Yap
 
           token :Argument, str
           i
+        end
+      end
+
+      def assignment_token
+        if !@looking_for_args && md=@chunk.match(LH_ASSIGNMENT)
+          token :LValue, md[2]
+          consumed_length = md[1].length
+          i = consumed_length
+
+          @chunk = @chunk[i..-1]
+          if %w(' ").include?(@chunk[0])
+            result = process_string @chunk[0..-1], @chunk[0]
+            token :RValue, result.str
+            consumed_length += result.consumed_length
+          elsif md=@chunk.match(RH_VALUE)
+            token :RValue, md[1]
+            consumed_length += md[0].length
+          end
+          consumed_length
         end
       end
 

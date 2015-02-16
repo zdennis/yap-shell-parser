@@ -645,6 +645,52 @@ describe Yap::Line::Lexer do
         ]}
       end
     end
+  end
+
+  describe "variables" do
+    describe "one can be assigned its their own: FOO=123" do
+      let(:str){ "FOO=123" }
+      it { should eq [
+        t(:LValue, "FOO", lineno: 0),
+        t(:RValue, "123", lineno: 0)
+      ]}
+    end
+
+    describe "many can be assigned on their own: FOO=123 BAR=a_c BAZ=4-5:6" do
+      let(:str){ "FOO=123 BAR=a_c BAZ=4-5:6" }
+      it { should eq [
+        t(:LValue, "FOO", lineno: 0),
+        t(:RValue, "123", lineno: 0),
+        t(:LValue, "BAR", lineno: 0),
+        t(:RValue, "a_c", lineno: 0),
+        t(:LValue, "BAZ", lineno: 0),
+        t(:RValue, "4-5:6", lineno: 0)
+      ]}
+    end
+
+    describe "can be assigned before a command: FOO=123 echo $FOO" do
+      let(:str){ "FOO=123 echo $FOO" }
+      it { should eq [
+        t(:LValue, "FOO", lineno: 0),
+        t(:RValue, "123", lineno: 0),
+        t(:Command, "echo", lineno: 0),
+        t(:Argument, "$FOO", lineno: 0)
+      ]}
+    end
+
+    describe "can be assigned before a command: FOO=abc BAR='hello world' ls -l" do
+      let(:str){ "FOO=abc BAR='hello world' ls -l" }
+      it { should eq [
+        t(:LValue, "FOO", lineno: 0),
+        t(:RValue, "abc", lineno: 0),
+        t(:LValue, "BAR", lineno: 0),
+        t(:RValue, "hello world", lineno: 0),
+        t(:Command, "ls", lineno: 0),
+        t(:Argument, "-l", lineno: 0)
+      ]}
+    end
+
+
 
   end
 
