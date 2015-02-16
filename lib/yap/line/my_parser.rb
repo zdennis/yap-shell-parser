@@ -251,7 +251,7 @@ module_eval(<<'.,.,', 'grammar.y', 45)
 
 module_eval(<<'.,.,', 'grammar.y', 51)
   def _reduce_17(val, _values, result)
-     result = val 
+     result = EnvWrapperNode.new(val[0], val[1]) 
     result
   end
 .,.,

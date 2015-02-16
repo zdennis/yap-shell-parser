@@ -49,7 +49,7 @@ command_w_redirects : command_w_redirects Redirection
   | vars
 
 command_w_vars : vars command
-  { result = val }
+  { result = EnvWrapperNode.new(val[0], val[1]) }
 
 vars : vars LValue RValue
     { val[0].add_var(val[1].value, val[2].value) ; result = val[0] }

@@ -75,6 +75,21 @@ module Yap
         end
       end
 
+      class EnvWrapperNode
+        include Visitor
+
+        attr_reader :node
+
+        def initialize(env, node)
+          @env = env
+          @node = node
+        end
+
+        def env
+          @env.env
+        end
+      end
+
       class StatementsNode
         include Visitor
 
