@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/zdennis/yap-shell-line-parser.svg?branch=master)](https://travis-ci.org/zdennis/yap-shell-line-parser)
 
-# Yap::Line::Parser
+# Yap::Shell::Line::Parser
 
 The yap-shell-line-parser is the input parser for the yap-shell.
 

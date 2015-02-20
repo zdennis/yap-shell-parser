@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'yap/line/parser/version'
+require 'yap/shell/line/parser/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "yap-shell-line-parser"
-  spec.version       = Yap::Line::Parser::VERSION
+  spec.version       = Yap::Shell::Line::Parser::VERSION
   spec.authors       = ["Zach Dennis"]
   spec.email         = ["zach.dennis@gmail.com"]
   spec.summary       = %q{The line parser for the yap shell.}
