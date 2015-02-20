@@ -1,5 +1,5 @@
-module Yap::Shell::Line
-  module Nodes
+module Yap::Shell
+  module Parser::Nodes
     module Visitor
       def accept(visitor, *args)
         visitor.send "visit_#{self.class.name.split("::").last}", self, *args

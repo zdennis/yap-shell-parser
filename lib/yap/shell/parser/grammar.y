@@ -2,7 +2,7 @@
 #
 # convert Array-like string into Ruby's Array.
 
-class Yap::Shell::Line::Parser
+class Yap::Shell::Parser
   token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe Redirection LValue RValue
   #
   # prechigh
@@ -78,15 +78,15 @@ internal_eval : InternalEval
 
 ---- inner
   $LOAD_PATH.unshift File.dirname(__FILE__) + "/../../"
-  require 'yap/shell/line/lexer'
-  require 'yap/shell/line/nodes'
+  require 'yap/shell/parser/lexer'
+  require 'yap/shell/parser/nodes'
 
-  include Yap::Shell::Line::Nodes
+  include Yap::Shell::Parser::Nodes
 
   def parse(str)
     # @yydebug = true
 
-    @q = Yap::Shell::Line::Lexer.new.tokenize(str)
+    @q = Yap::Shell::Parser::Lexer.new.tokenize(str)
     # @q.push [false, '$']   # is optional from Racc 1.3.7
 # puts @q.inspect
 # puts "---- parse tree follows ----"
@@ -102,8 +102,8 @@ internal_eval : InternalEval
 
 if $0 == __FILE__
   $LOAD_PATH.unshift File.dirname(__FILE__) + "/../../"
-  require 'yap/shell/line/lexer'
-  require 'yap/shell/line/nodes'
+  require 'yap/shell/parser/lexer'
+  require 'yap/shell/parser/nodes'
     [
     # "echo foo",
     # "echo foo ; echo bar baz yep",
@@ -139,7 +139,7 @@ if $0 == __FILE__
       puts
       puts 'result:'
       require 'pp'
-      ast = Yap::Shell::Line::Parser.new.parse(src)
+      ast = Yap::Shell::Parser.new.parse(src)
       pp ast
     end
 

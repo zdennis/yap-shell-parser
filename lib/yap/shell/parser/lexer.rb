@@ -1,7 +1,7 @@
 require 'ostruct'
 
-module Yap::Shell::Line
-  class Lexer
+module Yap::Shell
+  class Parser::Lexer
     class Token
       include Comparable
 

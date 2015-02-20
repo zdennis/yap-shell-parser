@@ -1,11 +1,11 @@
 require 'spec_helper'
-require 'yap/shell/line/lexer'
+require 'yap/shell/parser/lexer'
 
-describe Yap::Shell::Line::Lexer do
+describe Yap::Shell::Parser::Lexer do
   subject { described_class.new.tokenize(str) }
 
   def t(tag, val, lineno:0, attrs:{})
-    [tag, Yap::Shell::Line::Lexer::Token.new(tag, val, lineno:lineno, attrs:attrs)]
+    [tag, Yap::Shell::Parser::Lexer::Token.new(tag, val, lineno:lineno, attrs:attrs)]
   end
 
   describe "empty string" do
