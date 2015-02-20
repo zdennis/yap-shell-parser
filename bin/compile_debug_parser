@@ -1,3 +1,3 @@
 #!/bin/bash
 
-racc -t lib/yap/shell/line/grammar.y -o lib/yap/shell/line/parser.rb
+racc -t lib/yap/shell/parser/grammar.y -o lib/yap/shell/parser.rb

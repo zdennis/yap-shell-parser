@@ -1,7 +1,7 @@
 namespace :bump do
   namespace :version do
     class ProjectVersion
-      FILE = File.dirname(__FILE__) + '/../yap/shell/line/parser/version.rb'
+      FILE = File.dirname(__FILE__) + '/../yap/shell/parser/version.rb'
       PATTERN = /VERSION\s*=\s*"(\d+)\.(\d+)\.(\d+)"/m
 
       def initialize(file=FILE, pattern=PATTERN)

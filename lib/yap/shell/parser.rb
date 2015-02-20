@@ -7,20 +7,19 @@
 require 'racc/parser.rb'
 module Yap
   module Shell
-    module Line
-      class Parser < Racc::Parser
+    class Parser < Racc::Parser
 
 module_eval(<<'...end grammar.y/module_eval...', 'grammar.y', 80)
   $LOAD_PATH.unshift File.dirname(__FILE__) + "/../../"
-  require 'yap/shell/line/lexer'
-  require 'yap/shell/line/nodes'
+  require 'yap/shell/parser/lexer'
+  require 'yap/shell/parser/nodes'
 
-  include Yap::Shell::Line::Nodes
+  include Yap::Shell::Parser::Nodes
 
   def parse(str)
     # @yydebug = true
 
-    @q = Yap::Shell::Line::Lexer.new.tokenize(str)
+    @q = Yap::Shell::Parser::Lexer.new.tokenize(str)
     # @q.push [false, '$']   # is optional from Racc 1.3.7
 # puts @q.inspect
 # puts "---- parse tree follows ----"
@@ -326,16 +325,15 @@ def _reduce_none(val, _values, result)
   val[0]
 end
 
-      end   # class Parser
-      end   # module Line
+    end   # class Parser
     end   # module Shell
   end   # module Yap
 
 
 if $0 == __FILE__
   $LOAD_PATH.unshift File.dirname(__FILE__) + "/../../"
-  require 'yap/shell/line/lexer'
-  require 'yap/shell/line/nodes'
+  require 'yap/shell/parser/lexer'
+  require 'yap/shell/parser/nodes'
     [
     # "echo foo",
     # "echo foo ; echo bar baz yep",
@@ -371,7 +369,7 @@ if $0 == __FILE__
       puts
       puts 'result:'
       require 'pp'
-      ast = Yap::Shell::Line::Parser.new.parse(src)
+      ast = Yap::Shell::Parser.new.parse(src)
       pp ast
     end
 
