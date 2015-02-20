@@ -2,7 +2,7 @@
 #
 # convert Array-like string into Ruby's Array.
 
-class Yap::Line::MyParser
+class Yap::Line::Parser
   token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe Redirection LValue RValue
   #
   # prechigh
@@ -139,7 +139,7 @@ if $0 == __FILE__
       puts
       puts 'result:'
       require 'pp'
-      ast = Yap::Line::MyParser.new.parse(src)
+      ast = Yap::Line::Parser.new.parse(src)
       pp ast
     end
 
