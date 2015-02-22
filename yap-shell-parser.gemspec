@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["zach.dennis@gmail.com"]
   spec.summary       = %q{The parser for the yap shell}
   spec.description   = %q{The parser for the yap shell}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/zdennis/yap-shell-parser"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0")
