@@ -33,7 +33,8 @@ module Yap::Shell
       end
     end
 
-    ARG                    = /[^\s;\|\(\)\{\}\[\]\&\!\\\<][^\s;\|\(\)\{\}\[\]\&\!\>\<]*/
+    COMMAND_SUBSTITUTION   = /\A(`|\$\()/
+    ARG                    = /[^\s;\|\(\)\{\}\[\]\&\!\\\<`][^\s;\|\(\)\{\}\[\]\&\!\>\<`]*/
     COMMAND                = /\A(#{ARG})/
     LITERAL_COMMAND        = /\A\\(#{ARG})/
     WHITESPACE             = /\A[^\n\S]+/
@@ -61,7 +62,9 @@ module Yap::Shell
       process_next_chunk = -> { @chunk = str.slice(@current_position..-1) ; @chunk != "" }
 
       while process_next_chunk.call
-        result = subgroup_token ||
+        result =
+          command_substitution_token ||
+          subgroup_token ||
           assignment_token ||
           literal_command_token ||
           command_token ||
@@ -72,6 +75,7 @@ module Yap::Shell
           string_argument_token ||
           argument_token ||
           internal_eval_token
+
 
         count += 1
         raise "Infinite loop detected on #{@chunk.inspect}" if count == max
@@ -227,6 +231,18 @@ module Yap::Shell
         result = process_string @chunk[0..-1], @chunk[0]
         token :Argument, result.str
         return result.consumed_length
+      end
+    end
+
+    def command_substitution_token
+      if md=@chunk.match(COMMAND_SUBSTITUTION)
+        delimiter = md[1] == "$(" ? ")" : md[1]
+        result = process_string @chunk[md[0].length-1..-1], delimiter
+        token :BeginSubcommand, md[1]
+        @tokens.push *self.class.new.tokenize(result.str)
+        token :EndSubcommand, delimiter
+
+        result.consumed_length + (md[0].length - 1)
       end
     end
 

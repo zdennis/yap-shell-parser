@@ -689,8 +689,114 @@ describe Yap::Shell::Parser::Lexer do
         t(:Argument, "-l", lineno: 0)
       ]}
     end
+  end
 
+  describe "command substitution" do
+    describe "backticks can wrap simple commands: `pwd`" do
+      let(:str){ "`pwd`" }
+      it { should eq [
+        t(:BeginSubcommand, "`", lineno: 0),
+        t(:Command, "pwd", lineno: 0),
+        t(:EndSubcommand, "`", lineno: 0)
+      ]}
+    end
 
+    describe "backticks can wrap complex statements: `ls -al && foo bar || baz`" do
+      let(:str){ "`ls -al && foo bar || baz`" }
+      it { should eq [
+        t(:BeginSubcommand, "`", lineno: 0),
+        t(:Command,'ls', lineno: 0),
+        t(:Argument, '-al', lineno: 0),
+        t(:Conditional, '&&', lineno: 0),
+        t(:Command, 'foo', lineno: 0),
+        t(:Argument, 'bar', lineno: 0),
+        t(:Conditional, '||', lineno: 0),
+        t(:Command, 'baz', lineno: 0),
+        t(:EndSubcommand, "`", lineno: 0)
+      ]}
+    end
+
+    describe "backticks can appear as an argument: echo `pwd`" do
+      let(:str){ "echo `pwd`" }
+      it { should eq [
+        t(:Command,'echo', lineno: 0),
+        t(:BeginSubcommand, "`", lineno: 0),
+        t(:Command,'pwd', lineno: 0),
+        t(:EndSubcommand, "`", lineno: 0)
+      ]}
+    end
+
+    describe "backticks can appear as a complex argument: echo `pwd && foo bar || baz ; yep` ; hello" do
+      let(:str){ "echo `pwd && foo bar || baz ; yep` ; hello" }
+      it { should eq [
+        t(:Command,'echo', lineno: 0),
+        t(:BeginSubcommand, "`", lineno: 0),
+        t(:Command,'pwd', lineno: 0),
+        t(:Conditional, '&&', lineno: 0),
+        t(:Command, 'foo', lineno: 0),
+        t(:Argument, 'bar', lineno: 0),
+        t(:Conditional, '||', lineno: 0),
+        t(:Command, 'baz', lineno: 0),
+        t(:Separator, ";", lineno: 0),
+        t(:Command, 'yep', lineno: 0),
+        t(:EndSubcommand, "`", lineno: 0),
+        t(:Separator, ";", lineno: 0),
+        t(:Command, "hello", lineno: 0)
+      ]}
+    end
+
+    describe "dollar-sign paren can wrap simple commands: $(pwd)" do
+      let(:str){ "$(pwd)" }
+      it { should eq [
+        t(:BeginSubcommand, "$(", lineno: 0),
+        t(:Command, "pwd", lineno: 0),
+        t(:EndSubcommand, ")", lineno: 0)
+      ]}
+    end
+
+    describe "dollar-sign paren can wrap complex statements: $(ls -al && foo bar || baz)" do
+      let(:str){ "`ls -al && foo bar || baz`" }
+      it { should eq [
+        t(:BeginSubcommand, "`", lineno: 0),
+        t(:Command,'ls', lineno: 0),
+        t(:Argument, '-al', lineno: 0),
+        t(:Conditional, '&&', lineno: 0),
+        t(:Command, 'foo', lineno: 0),
+        t(:Argument, 'bar', lineno: 0),
+        t(:Conditional, '||', lineno: 0),
+        t(:Command, 'baz', lineno: 0),
+        t(:EndSubcommand, "`", lineno: 0)
+      ]}
+    end
+
+    describe "dollar-sign paren can appear as an argument: echo $(pwd)" do
+      let(:str){ "echo $(pwd)" }
+      it { should eq [
+        t(:Command,'echo', lineno: 0),
+        t(:BeginSubcommand, "$(", lineno: 0),
+        t(:Command,'pwd', lineno: 0),
+        t(:EndSubcommand, ")", lineno: 0)
+      ]}
+    end
+
+    describe "dollar-sign paren can appear as a complex argument: echo $(pwd && foo bar || baz ; yep) ; hello" do
+      let(:str){ "echo $(pwd && foo bar || baz ; yep) ; hello" }
+      it { should eq [
+        t(:Command,'echo', lineno: 0),
+        t(:BeginSubcommand, "$(", lineno: 0),
+        t(:Command,'pwd', lineno: 0),
+        t(:Conditional, '&&', lineno: 0),
+        t(:Command, 'foo', lineno: 0),
+        t(:Argument, 'bar', lineno: 0),
+        t(:Conditional, '||', lineno: 0),
+        t(:Command, 'baz', lineno: 0),
+        t(:Separator, ";", lineno: 0),
+        t(:Command, 'yep', lineno: 0),
+        t(:EndSubcommand, ")", lineno: 0),
+        t(:Separator, ";", lineno: 0),
+        t(:Command, "hello", lineno: 0)
+      ]}
+    end
 
   end
 
