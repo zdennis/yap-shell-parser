@@ -38,7 +38,6 @@ module Yap::Shell
     COMMAND                = /\A(#{ARG})/
     LITERAL_COMMAND        = /\A\\(#{ARG})/
     WHITESPACE             = /\A[^\n\S]+/
-    ARGUMENT               = /\A(#{ARG}+)/
     LH_ASSIGNMENT          = /\A(([A-z_][\w]*)=)/
     RH_VALUE               = /\A(\S+)/
     STATEMENT_TERMINATOR   = /\A(;)/
@@ -75,7 +74,6 @@ module Yap::Shell
           string_argument_token ||
           argument_token ||
           internal_eval_token
-
 
         count += 1
         raise "Infinite loop detected on #{@chunk.inspect}" if count == max
@@ -165,7 +163,7 @@ module Yap::Shell
     end
 
     def argument_token
-      if @looking_for_args && md=@chunk.match(ARGUMENT)
+      if @looking_for_args
         str = ''
         i = 0
         loop do
@@ -174,8 +172,7 @@ module Yap::Shell
             result = process_string @chunk[i..-1], ch
             str << result.str
             i += result.consumed_length
-
-          elsif ch !~ ARGUMENT
+          elsif ch =~ /[\s\|;&]/
             break
           else
             str << ch
