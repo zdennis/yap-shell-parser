@@ -1,7 +1,9 @@
-module Yap::Shell
-  module Parser
-    def self.new
-      Yap::Shell::ParserImpl.new
+module Yap
+  module Shell
+    module Parser
+      def self.new
+        Yap::Shell::ParserImpl.new
+      end
     end
   end
 end

@@ -1,5 +1,9 @@
 require 'yap/shell/parser'
 
-class Yap::Shell::Parser
-  VERSION = "0.0.2"
+module Yap
+  module Shell
+    module Parser
+      VERSION = "0.0.2"
+    end
+  end
 end
