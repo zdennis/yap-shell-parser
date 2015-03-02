@@ -2,7 +2,7 @@
 #
 # convert Array-like string into Ruby's Array.
 
-class Yap::Shell::Parser
+class Yap::Shell::ParserImpl
   token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe Redirection LValue RValue
   #
   # prechigh
@@ -77,12 +77,8 @@ internal_eval : InternalEval
 
 
 ---- inner
-  $LOAD_PATH.unshift File.dirname(__FILE__) + "/../../"
-  require 'yap/shell/parser/lexer'
-  require 'yap/shell/parser/nodes'
-
   include Yap::Shell::Parser::Nodes
-
+#=end
   def parse(str)
     # @yydebug = true
 
@@ -101,7 +97,7 @@ internal_eval : InternalEval
 ---- footer
 
 if $0 == __FILE__
-  $LOAD_PATH.unshift File.dirname(__FILE__) + "/../../"
+  $LOAD_PATH.unshift File.dirname(__FILE__) + "/lib/"
   require 'yap/shell/parser/lexer'
   require 'yap/shell/parser/nodes'
     [
