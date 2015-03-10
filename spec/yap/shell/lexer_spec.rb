@@ -701,6 +701,19 @@ describe Yap::Shell::Parser::Lexer do
       ]}
     end
 
+    describe "backticks can be used as part of an argument: git branch `git cbranch`.bak" do
+      let(:str){ "git branch `git cbranch`.bak" }
+      it { should eq [
+        t(:Command, "git", lineno: 0),
+        t(:Argument, "branch", lineno: 0),
+        t(:BeginSubcommand, '`', lineno: 0),
+        t(:Command, 'git', lineno: 0),
+        t(:Argument, 'cbranch', lineno: 0),
+        t(:EndSubcommand, '`', lineno: 0),
+        t(:Argument, '.bak', lineno: 0)
+      ]}
+    end
+
     describe "backticks can wrap complex statements: `ls -al && foo bar || baz`" do
       let(:str){ "`ls -al && foo bar || baz`" }
       it { should eq [
@@ -755,9 +768,9 @@ describe Yap::Shell::Parser::Lexer do
     end
 
     describe "dollar-sign paren can wrap complex statements: $(ls -al && foo bar || baz)" do
-      let(:str){ "`ls -al && foo bar || baz`" }
+      let(:str){ "$(ls -al && foo bar || baz)" }
       it { should eq [
-        t(:BeginSubcommand, "`", lineno: 0),
+        t(:BeginSubcommand, "$(", lineno: 0),
         t(:Command,'ls', lineno: 0),
         t(:Argument, '-al', lineno: 0),
         t(:Conditional, '&&', lineno: 0),
@@ -765,7 +778,7 @@ describe Yap::Shell::Parser::Lexer do
         t(:Argument, 'bar', lineno: 0),
         t(:Conditional, '||', lineno: 0),
         t(:Command, 'baz', lineno: 0),
-        t(:EndSubcommand, "`", lineno: 0)
+        t(:EndSubcommand, ")", lineno: 0)
       ]}
     end
 
