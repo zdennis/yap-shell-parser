@@ -235,9 +235,9 @@ module Yap::Shell
       if md=@chunk.match(COMMAND_SUBSTITUTION)
         delimiter = md[1] == "$(" ? ")" : md[1]
         result = process_string @chunk[md[0].length-1..-1], delimiter
-        token :BeginSubcommand, md[1]
+        token :BeginCommandSubstitution, md[1]
         @tokens.push *self.class.new.tokenize(result.str)
-        token :EndSubcommand, delimiter
+        token :EndCommandSubstitution, delimiter
 
         result.consumed_length + (md[0].length - 1)
       end

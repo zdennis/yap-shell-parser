@@ -48,5 +48,5 @@ describe Yap::Shell::Parser do
   it_parses "FOO=123 BAR=345"
   it_parses "FOO=abc bar=2314 car=14ab ls -l"
   it_parses "FOO=abc BAR='hello world' ls -l ; CAR=f echo foo && say hi"
-
+  it_parses "`git cbranch`"
 end

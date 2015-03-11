@@ -201,5 +201,23 @@ module Yap::Shell
       end
     end
 
+    class CommandSubstitutionNode
+      include Visitor
+
+      attr_reader :node
+
+      def initialize(node)
+        @node = node
+      end
+
+      def to_s(indent:0)
+        "CommandSubstitutionNode(#{@node.to_s})"
+      end
+
+      def inspect
+        to_s
+      end
+    end
+
   end
 end

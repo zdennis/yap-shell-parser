@@ -3,7 +3,7 @@
 # convert Array-like string into Ruby's Array.
 
 class Yap::Shell::ParserImpl
-  token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe Redirection LValue RValue
+  token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe Redirection LValue RValue BeginCommandSubstitution EndCommandSubstitution
   #
   # prechigh
   # #   left '**' '*' '/' '%'
@@ -35,6 +35,8 @@ pipeline : pipeline Pipe stmts2
 
 stmts2 : '(' stmts ')'
     { result = val[1] }
+  | BeginCommandSubstitution stmts EndCommandSubstitution
+    { result = CommandSubstitutionNode.new(val[1]) }
   | command_w_heredoc
   | internal_eval
 
@@ -87,7 +89,7 @@ internal_eval : InternalEval
 # puts @q.inspect
 # puts "---- parse tree follows ----"
     __send__(Racc_Main_Parsing_Routine, _racc_setup(), false)
-    #do_parse
+    # do_parse
   end
 
   def next_token
