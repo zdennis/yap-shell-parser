@@ -172,7 +172,7 @@ module Yap::Shell
             result = process_string @chunk[i..-1], ch
             str << result.str
             i += result.consumed_length
-          elsif ch =~ /[\s\|;&]/
+          elsif ch =~ /[\s\|;&\)]/
             break
           else
             str << ch

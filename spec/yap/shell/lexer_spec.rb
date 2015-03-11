@@ -444,6 +444,19 @@ describe Yap::Shell::Parser::Lexer do
       ]}
     end
 
+    describe 'simple command with arguments: (foo a b)' do
+      let(:str){ "(foo a (b))" }
+      it { should eq [
+        t('(', '(', lineno:0),
+        t(:Command, 'foo', lineno:0),
+        t(:Argument, 'a', lineno:0),
+        t('(', '(', lineno:0),
+        t(:Argument, 'b', lineno:0),
+        t(')', ')', lineno:0),
+        t(')', ')', lineno:0)
+      ]}
+    end
+
     describe 'simple interval eval: (!bar)' do
       let(:str){ "(!bar)" }
       it { should eq [
