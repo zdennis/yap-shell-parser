@@ -714,8 +714,8 @@ describe Yap::Shell::Parser::Lexer do
       ]}
     end
 
-    describe "backticks can be used as part of an argument: git branch `git cbranch`.bak" do
-      let(:str){ "git branch `git cbranch`.bak" }
+    describe "backticks can be used with additional arguments: git branch `git cbranch` bak" do
+      let(:str){ "git branch `git cbranch` bak" }
       it { should eq [
         t(:Command, "git", lineno: 0),
         t(:Argument, "branch", lineno: 0),
@@ -723,7 +723,87 @@ describe Yap::Shell::Parser::Lexer do
         t(:Command, 'git', lineno: 0),
         t(:Argument, 'cbranch', lineno: 0),
         t(:EndCommandSubstitution, '`', lineno: 0),
-        t(:Argument, '.bak', lineno: 0)
+        t(:Argument, 'bak', lineno: 0)
+      ]}
+    end
+
+    describe "backticks and following arguments can be separated: `ls`<SEPERATOR>bak" do
+      context "separated with a space" do
+        let(:str){ "`ls` bak" }
+        it { should eq [
+          t(:BeginCommandSubstitution, '`', lineno: 0),
+          t(:Command, 'ls', lineno: 0),
+          t(:EndCommandSubstitution, '`', lineno: 0),
+          t(:Argument, 'bak', lineno: 0)
+        ]}
+      end
+
+      context "separated with a semi-colon" do
+        let(:str){ "`ls`;bak" }
+        it { should eq [
+          t(:BeginCommandSubstitution, '`', lineno: 0),
+          t(:Command, 'ls', lineno: 0),
+          t(:EndCommandSubstitution, '`', lineno: 0),
+          t(:Separator, ';', lineno: 0),
+          t(:Command, 'bak', lineno: 0)
+        ]}
+      end
+
+      context "separated with a pipe" do
+        let(:str){ "`ls`|bak" }
+        it { should eq [
+          t(:BeginCommandSubstitution, '`', lineno: 0),
+          t(:Command, 'ls', lineno: 0),
+          t(:EndCommandSubstitution, '`', lineno: 0),
+          t(:Pipe, '|', lineno: 0),
+          t(:Command, 'bak', lineno: 0)
+        ]}
+      end
+
+      context "separated with &&" do
+        let(:str){ "`ls`&&bak" }
+        it { should eq [
+          t(:BeginCommandSubstitution, '`', lineno: 0),
+          t(:Command, 'ls', lineno: 0),
+          t(:EndCommandSubstitution, '`', lineno: 0),
+          t(:Conditional, '&&', lineno: 0),
+          t(:Command, 'bak', lineno: 0)
+        ]}
+      end
+
+      context "separated with ||" do
+        let(:str){ "`ls`||bak" }
+        it { should eq [
+          t(:BeginCommandSubstitution, '`', lineno: 0),
+          t(:Command, 'ls', lineno: 0),
+          t(:EndCommandSubstitution, '`', lineno: 0),
+          t(:Conditional, '||', lineno: 0),
+          t(:Command, 'bak', lineno: 0)
+        ]}
+      end
+
+      context "separated with &" do
+        let(:str){ "`ls`&bak" }
+        pending "background syntax not supported yet"
+        # it { should eq [
+        #   t(:BeginCommandSubstitution, '`', lineno: 0),
+        #   t(:Command, 'ls', lineno: 0),
+        #   t(:EndCommandSubstitution, '`', lineno: 0),
+        #   t(:Separator, '&', lineno: 0),
+        #   t(:Command, 'bak', lineno: 0)
+        # ]}
+      end
+    end
+
+    describe "backticks can be instructed to concatenate with arguments that aren't separated: git branch `git cbranch`.bak" do
+      let(:str){ "git branch `git cbranch`.bak" }
+      it { should eq [
+        t(:Command, "git", lineno: 0),
+        t(:Argument, "branch", lineno: 0),
+        t(:BeginCommandSubstitution, '`', lineno: 0),
+        t(:Command, 'git', lineno: 0),
+        t(:Argument, 'cbranch', lineno: 0),
+        t(:EndCommandSubstitution, '`', lineno: 0, attrs:{concat_with:'.bak'})
       ]}
     end
 

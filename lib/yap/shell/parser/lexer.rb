@@ -233,14 +233,41 @@ module Yap::Shell
 
     def command_substitution_token
       if md=@chunk.match(COMMAND_SUBSTITUTION)
+        @looking_for_args = true
+
         delimiter = md[1] == "$(" ? ")" : md[1]
         result = process_string @chunk[md[0].length-1..-1], delimiter
+
+        consumed_length_so_far = result.consumed_length + (md[0].length - 1)
+        append_result = process_until_separator(@chunk[consumed_length_so_far..-1])
+
         token :BeginCommandSubstitution, md[1]
         @tokens.push *self.class.new.tokenize(result.str)
-        token :EndCommandSubstitution, delimiter
 
-        result.consumed_length + (md[0].length - 1)
+        if append_result.consumed_length > 0
+          token :EndCommandSubstitution, delimiter, attrs:{concat_with: append_result.str}
+        else
+          token :EndCommandSubstitution, delimiter
+        end
+
+        return consumed_length_so_far + append_result.consumed_length
       end
+    end
+
+    def process_until_separator(input_str)
+      str = ""
+      i = 0
+      loop do
+        ch = input_str[i]
+
+        if ch && ch !~ /[\s;\|&>\$<]/
+          str << ch
+          i+=1
+        else
+          break
+        end
+      end
+      OpenStruct.new(str:str, consumed_length: str.length)
     end
 
     def process_internal_eval(input_str, consumed:0)
