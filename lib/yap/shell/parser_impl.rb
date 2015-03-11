@@ -331,34 +331,7 @@ if $0 == __FILE__
   require 'yap/shell/parser/lexer'
   require 'yap/shell/parser/nodes'
     [
-    # "echo foo",
-    # "echo foo ; echo bar baz yep",
-    # "echo foo && echo bar baz yep",
-    # "echo foo && echo bar && ls foo && ls bar",
-    # "echo foo ; echo bar baz yep ; ls foo",
-    # "echo foo && echo bar ; ls baz",
-    # "echo foo && echo bar ; ls baz ; echo zach || echo gretchen",
-    # "echo foo | bar",
-    # "echo foo | bar && foo | bar",
-    # "foo && bar ; word || baz ; yep | grep -v foo",
-    # "( foo )",
-    # "( foo a b && bar c d )",
-    # "( foo a b && (bar c d | baz e f))",
-    # "((((foo))))",
-    # "foo -b -c ; (this ;that ;the; other  ;thing) && yep",
-    # "foo -b -c ; (this ;that && other  ;thing) && yep",
-    # "4 + 5",
-    # "!'hello' ; 4 - 4 && 10 + 3",
-    # "\\foo <<-EOT\nbar\nEOT",
-    # "ls | grep md | grep WISH",
-    # "(!upcase)",
-    # "echo foo > bar.txt",
-    # "ls -l > a.txt ; echo f 2> b.txt ; cat b &> c.txt ; du -sh 1>&2 1>hey.txt",
-    # "!Dir.chdir('..')",
-    # "FOO=123",
-    # "FOO=123 BAR=345",
-    # "FOO=abc bar=2314 car=14ab ls -l",
-    "FOO=abc BAR='hello world' ls -l ; CAR=f echo foo && say hi"
+    "(foo a b && (bar c d | baz e f))"
     ].each do |src|
       puts 'parsing:'
       print src
