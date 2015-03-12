@@ -50,4 +50,5 @@ describe Yap::Shell::Parser do
   it_parses "FOO=abc BAR='hello world' ls -l ; CAR=f echo foo && say hi"
   it_parses "`git cbranch`"
   it_parses "`git cbranch`.bak"
+  it_parses "echo `echo hi`"
 end

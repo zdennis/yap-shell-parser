@@ -35,10 +35,13 @@ pipeline : pipeline Pipe stmts2
 
 stmts2 : '(' stmts ')'
     { result = val[1] }
-  | BeginCommandSubstitution stmts EndCommandSubstitution
-    { result = CommandSubstitutionNode.new(val[1]) }
+  | command_substitution
+  | stmts2 command_substitution
   | command_w_heredoc
   | internal_eval
+
+command_substitution : BeginCommandSubstitution stmts EndCommandSubstitution
+    { result = CommandSubstitutionNode.new(val[1]) }
 
 command_w_heredoc : command_w_redirects Heredoc
     { val[0].heredoc = val[1] ; result = val[0] }
