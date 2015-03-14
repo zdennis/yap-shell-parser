@@ -727,6 +727,18 @@ describe Yap::Shell::Parser::Lexer do
       ]}
     end
 
+    describe "backticks back to back: `hi``bye`" do
+      let(:str){ "`hi``bye`" }
+      it { should eq [
+        t(:BeginCommandSubstitution, '`', lineno: 0),
+        t(:Command, 'hi', lineno: 0),
+        t(:EndCommandSubstitution, '`', lineno: 0),
+        t(:BeginCommandSubstitution, '`', lineno: 0),
+        t(:Command, 'bye', lineno: 0),
+        t(:EndCommandSubstitution, '`', lineno: 0),
+      ]}
+    end
+
     describe "backticks and following arguments can be separated: `ls`<SEPERATOR>bak" do
       context "separated with a space" do
         let(:str){ "`ls` bak" }

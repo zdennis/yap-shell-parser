@@ -260,7 +260,7 @@ module Yap::Shell
       loop do
         ch = input_str[i]
 
-        if ch && ch !~ /[\s;\|&>\$<]/
+        if ch && ch !~ /[\s;\|&>\$<`]/
           str << ch
           i+=1
         else
