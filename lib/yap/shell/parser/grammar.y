@@ -82,6 +82,17 @@ args : Argument
 internal_eval : InternalEval
     { result = InternalEvalNode.new(val[0].value) }
 
+---- header
+if $0 ==__FILE__
+  $LOAD_PATH.unshift File.dirname(__FILE__) + "/../../"
+  module Yap
+    module Shell
+      module Parser
+      end
+    end
+  end
+  require 'yap/shell/parser/nodes'
+end
 
 ---- inner
   include Yap::Shell::Parser::Nodes
@@ -115,7 +126,7 @@ if $0 == __FILE__
       puts
       puts 'result:'
       require 'pp'
-      ast = Yap::Shell::Parser.new.parse(src)
+      ast = Yap::Shell::ParserImpl.new.parse(src)
       pp ast
     end
 
