@@ -49,6 +49,40 @@ module Yap::Shell
     REDIRECTION            = /\A(([12]?>&?[12]?)\s*(?![12]>)(#{ARG})?)/
     REDIRECTION2           = /\A((&>|<)\s*(#{ARG}))/
 
+
+    # Loop over the given input and yield command substitutions. This yields
+    # an object that responds to #str, and #position.
+    #
+    # * The #str will be the contents of the command substitution, e.g. foo in `foo` or $(foo)
+    # * The #position will be range denoting where the command substitution started and stops in the string
+    #
+    # This will yield a result for every command substitution found.
+    #
+    # == Note
+    #
+    # This will not yield nested command substitutions. The caller is responsible
+    # for that.
+    def each_command_substitution_for(input, &blk)
+      return unless input
+
+      i = 0
+      loop do
+        break if i >= input.length
+
+        @chunk = input[i..-1]
+        if md=@chunk.match(COMMAND_SUBSTITUTION)
+          start = i
+          delimiter = md[1] == "$(" ? ")" : md[1]
+          result = process_string @chunk[md[0].length-1..-1], delimiter
+          consumed_length_so_far = result.consumed_length + (md[0].length - 1)
+          i += consumed_length_so_far
+          yield OpenStruct.new(str:result.str, position:(start..i))
+        else
+          i += 1
+        end
+      end
+    end
+
     def tokenize(str)
       @str = str
       @tokens = []
@@ -172,7 +206,7 @@ module Yap::Shell
             result = process_string @chunk[i..-1], ch
             str << result.str
             i += result.consumed_length
-          elsif ch =~ /[\s\|;&]/
+          elsif ch =~ /[\s\|;&\)]/
             break
           else
             str << ch
@@ -233,14 +267,41 @@ module Yap::Shell
 
     def command_substitution_token
       if md=@chunk.match(COMMAND_SUBSTITUTION)
+        @looking_for_args = true
+
         delimiter = md[1] == "$(" ? ")" : md[1]
         result = process_string @chunk[md[0].length-1..-1], delimiter
-        token :BeginSubcommand, md[1]
-        @tokens.push *self.class.new.tokenize(result.str)
-        token :EndSubcommand, delimiter
 
-        result.consumed_length + (md[0].length - 1)
+        consumed_length_so_far = result.consumed_length + (md[0].length - 1)
+        append_result = process_until_separator(@chunk[consumed_length_so_far..-1])
+
+        token :BeginCommandSubstitution, md[1]
+        @tokens.push *self.class.new.tokenize(result.str)
+
+        if append_result.consumed_length > 0
+          token :EndCommandSubstitution, delimiter, attrs:{concat_with: append_result.str}
+        else
+          token :EndCommandSubstitution, delimiter
+        end
+
+        return consumed_length_so_far + append_result.consumed_length
       end
+    end
+
+    def process_until_separator(input_str)
+      str = ""
+      i = 0
+      loop do
+        ch = input_str[i]
+
+        if ch && ch !~ /[\s;\|&>\$<`]/
+          str << ch
+          i+=1
+        else
+          break
+        end
+      end
+      OpenStruct.new(str:str, consumed_length: str.length)
     end
 
     def process_internal_eval(input_str, consumed:0)

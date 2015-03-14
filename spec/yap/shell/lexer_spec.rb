@@ -444,6 +444,19 @@ describe Yap::Shell::Parser::Lexer do
       ]}
     end
 
+    describe 'simple command with arguments: (foo a b)' do
+      let(:str){ "(foo a (b))" }
+      it { should eq [
+        t('(', '(', lineno:0),
+        t(:Command, 'foo', lineno:0),
+        t(:Argument, 'a', lineno:0),
+        t('(', '(', lineno:0),
+        t(:Argument, 'b', lineno:0),
+        t(')', ')', lineno:0),
+        t(')', ')', lineno:0)
+      ]}
+    end
+
     describe 'simple interval eval: (!bar)' do
       let(:str){ "(!bar)" }
       it { should eq [
@@ -695,29 +708,121 @@ describe Yap::Shell::Parser::Lexer do
     describe "backticks can wrap simple commands: `pwd`" do
       let(:str){ "`pwd`" }
       it { should eq [
-        t(:BeginSubcommand, "`", lineno: 0),
+        t(:BeginCommandSubstitution, "`", lineno: 0),
         t(:Command, "pwd", lineno: 0),
-        t(:EndSubcommand, "`", lineno: 0)
+        t(:EndCommandSubstitution, "`", lineno: 0)
       ]}
     end
 
-    describe "backticks can be used as part of an argument: git branch `git cbranch`.bak" do
+    describe "backticks can be used with additional arguments: git branch `git cbranch` bak" do
+      let(:str){ "git branch `git cbranch` bak" }
+      it { should eq [
+        t(:Command, "git", lineno: 0),
+        t(:Argument, "branch", lineno: 0),
+        t(:BeginCommandSubstitution, '`', lineno: 0),
+        t(:Command, 'git', lineno: 0),
+        t(:Argument, 'cbranch', lineno: 0),
+        t(:EndCommandSubstitution, '`', lineno: 0),
+        t(:Argument, 'bak', lineno: 0)
+      ]}
+    end
+
+    describe "backticks back to back: `hi``bye`" do
+      let(:str){ "`hi``bye`" }
+      it { should eq [
+        t(:BeginCommandSubstitution, '`', lineno: 0),
+        t(:Command, 'hi', lineno: 0),
+        t(:EndCommandSubstitution, '`', lineno: 0),
+        t(:BeginCommandSubstitution, '`', lineno: 0),
+        t(:Command, 'bye', lineno: 0),
+        t(:EndCommandSubstitution, '`', lineno: 0),
+      ]}
+    end
+
+    describe "backticks and following arguments can be separated: `ls`<SEPERATOR>bak" do
+      context "separated with a space" do
+        let(:str){ "`ls` bak" }
+        it { should eq [
+          t(:BeginCommandSubstitution, '`', lineno: 0),
+          t(:Command, 'ls', lineno: 0),
+          t(:EndCommandSubstitution, '`', lineno: 0),
+          t(:Argument, 'bak', lineno: 0)
+        ]}
+      end
+
+      context "separated with a semi-colon" do
+        let(:str){ "`ls`;bak" }
+        it { should eq [
+          t(:BeginCommandSubstitution, '`', lineno: 0),
+          t(:Command, 'ls', lineno: 0),
+          t(:EndCommandSubstitution, '`', lineno: 0),
+          t(:Separator, ';', lineno: 0),
+          t(:Command, 'bak', lineno: 0)
+        ]}
+      end
+
+      context "separated with a pipe" do
+        let(:str){ "`ls`|bak" }
+        it { should eq [
+          t(:BeginCommandSubstitution, '`', lineno: 0),
+          t(:Command, 'ls', lineno: 0),
+          t(:EndCommandSubstitution, '`', lineno: 0),
+          t(:Pipe, '|', lineno: 0),
+          t(:Command, 'bak', lineno: 0)
+        ]}
+      end
+
+      context "separated with &&" do
+        let(:str){ "`ls`&&bak" }
+        it { should eq [
+          t(:BeginCommandSubstitution, '`', lineno: 0),
+          t(:Command, 'ls', lineno: 0),
+          t(:EndCommandSubstitution, '`', lineno: 0),
+          t(:Conditional, '&&', lineno: 0),
+          t(:Command, 'bak', lineno: 0)
+        ]}
+      end
+
+      context "separated with ||" do
+        let(:str){ "`ls`||bak" }
+        it { should eq [
+          t(:BeginCommandSubstitution, '`', lineno: 0),
+          t(:Command, 'ls', lineno: 0),
+          t(:EndCommandSubstitution, '`', lineno: 0),
+          t(:Conditional, '||', lineno: 0),
+          t(:Command, 'bak', lineno: 0)
+        ]}
+      end
+
+      context "separated with &" do
+        let(:str){ "`ls`&bak" }
+        pending "background syntax not supported yet"
+        # it { should eq [
+        #   t(:BeginCommandSubstitution, '`', lineno: 0),
+        #   t(:Command, 'ls', lineno: 0),
+        #   t(:EndCommandSubstitution, '`', lineno: 0),
+        #   t(:Separator, '&', lineno: 0),
+        #   t(:Command, 'bak', lineno: 0)
+        # ]}
+      end
+    end
+
+    describe "backticks can be instructed to concatenate with arguments that aren't separated: git branch `git cbranch`.bak" do
       let(:str){ "git branch `git cbranch`.bak" }
       it { should eq [
         t(:Command, "git", lineno: 0),
         t(:Argument, "branch", lineno: 0),
-        t(:BeginSubcommand, '`', lineno: 0),
+        t(:BeginCommandSubstitution, '`', lineno: 0),
         t(:Command, 'git', lineno: 0),
         t(:Argument, 'cbranch', lineno: 0),
-        t(:EndSubcommand, '`', lineno: 0),
-        t(:Argument, '.bak', lineno: 0)
+        t(:EndCommandSubstitution, '`', lineno: 0, attrs:{concat_with:'.bak'})
       ]}
     end
 
     describe "backticks can wrap complex statements: `ls -al && foo bar || baz`" do
       let(:str){ "`ls -al && foo bar || baz`" }
       it { should eq [
-        t(:BeginSubcommand, "`", lineno: 0),
+        t(:BeginCommandSubstitution, "`", lineno: 0),
         t(:Command,'ls', lineno: 0),
         t(:Argument, '-al', lineno: 0),
         t(:Conditional, '&&', lineno: 0),
@@ -725,7 +830,7 @@ describe Yap::Shell::Parser::Lexer do
         t(:Argument, 'bar', lineno: 0),
         t(:Conditional, '||', lineno: 0),
         t(:Command, 'baz', lineno: 0),
-        t(:EndSubcommand, "`", lineno: 0)
+        t(:EndCommandSubstitution, "`", lineno: 0)
       ]}
     end
 
@@ -733,9 +838,9 @@ describe Yap::Shell::Parser::Lexer do
       let(:str){ "echo `pwd`" }
       it { should eq [
         t(:Command,'echo', lineno: 0),
-        t(:BeginSubcommand, "`", lineno: 0),
+        t(:BeginCommandSubstitution, "`", lineno: 0),
         t(:Command,'pwd', lineno: 0),
-        t(:EndSubcommand, "`", lineno: 0)
+        t(:EndCommandSubstitution, "`", lineno: 0)
       ]}
     end
 
@@ -743,7 +848,7 @@ describe Yap::Shell::Parser::Lexer do
       let(:str){ "echo `pwd && foo bar || baz ; yep` ; hello" }
       it { should eq [
         t(:Command,'echo', lineno: 0),
-        t(:BeginSubcommand, "`", lineno: 0),
+        t(:BeginCommandSubstitution, "`", lineno: 0),
         t(:Command,'pwd', lineno: 0),
         t(:Conditional, '&&', lineno: 0),
         t(:Command, 'foo', lineno: 0),
@@ -752,7 +857,7 @@ describe Yap::Shell::Parser::Lexer do
         t(:Command, 'baz', lineno: 0),
         t(:Separator, ";", lineno: 0),
         t(:Command, 'yep', lineno: 0),
-        t(:EndSubcommand, "`", lineno: 0),
+        t(:EndCommandSubstitution, "`", lineno: 0),
         t(:Separator, ";", lineno: 0),
         t(:Command, "hello", lineno: 0)
       ]}
@@ -761,16 +866,16 @@ describe Yap::Shell::Parser::Lexer do
     describe "dollar-sign paren can wrap simple commands: $(pwd)" do
       let(:str){ "$(pwd)" }
       it { should eq [
-        t(:BeginSubcommand, "$(", lineno: 0),
+        t(:BeginCommandSubstitution, "$(", lineno: 0),
         t(:Command, "pwd", lineno: 0),
-        t(:EndSubcommand, ")", lineno: 0)
+        t(:EndCommandSubstitution, ")", lineno: 0)
       ]}
     end
 
     describe "dollar-sign paren can wrap complex statements: $(ls -al && foo bar || baz)" do
       let(:str){ "$(ls -al && foo bar || baz)" }
       it { should eq [
-        t(:BeginSubcommand, "$(", lineno: 0),
+        t(:BeginCommandSubstitution, "$(", lineno: 0),
         t(:Command,'ls', lineno: 0),
         t(:Argument, '-al', lineno: 0),
         t(:Conditional, '&&', lineno: 0),
@@ -778,7 +883,7 @@ describe Yap::Shell::Parser::Lexer do
         t(:Argument, 'bar', lineno: 0),
         t(:Conditional, '||', lineno: 0),
         t(:Command, 'baz', lineno: 0),
-        t(:EndSubcommand, ")", lineno: 0)
+        t(:EndCommandSubstitution, ")", lineno: 0)
       ]}
     end
 
@@ -786,9 +891,9 @@ describe Yap::Shell::Parser::Lexer do
       let(:str){ "echo $(pwd)" }
       it { should eq [
         t(:Command,'echo', lineno: 0),
-        t(:BeginSubcommand, "$(", lineno: 0),
+        t(:BeginCommandSubstitution, "$(", lineno: 0),
         t(:Command,'pwd', lineno: 0),
-        t(:EndSubcommand, ")", lineno: 0)
+        t(:EndCommandSubstitution, ")", lineno: 0)
       ]}
     end
 
@@ -796,7 +901,7 @@ describe Yap::Shell::Parser::Lexer do
       let(:str){ "echo $(pwd && foo bar || baz ; yep) ; hello" }
       it { should eq [
         t(:Command,'echo', lineno: 0),
-        t(:BeginSubcommand, "$(", lineno: 0),
+        t(:BeginCommandSubstitution, "$(", lineno: 0),
         t(:Command,'pwd', lineno: 0),
         t(:Conditional, '&&', lineno: 0),
         t(:Command, 'foo', lineno: 0),
@@ -805,10 +910,60 @@ describe Yap::Shell::Parser::Lexer do
         t(:Command, 'baz', lineno: 0),
         t(:Separator, ";", lineno: 0),
         t(:Command, 'yep', lineno: 0),
-        t(:EndSubcommand, ")", lineno: 0),
+        t(:EndCommandSubstitution, ")", lineno: 0),
         t(:Separator, ";", lineno: 0),
         t(:Command, "hello", lineno: 0)
       ]}
+    end
+
+  end
+
+  describe '#each_command_substitution_for' do
+    context 'when there are no substitutions' do
+      let(:str){ "echo " }
+
+      it "doesn't yield" do
+        expect { |b|
+          described_class.new.each_command_substitution_for(str, &b)
+        }.to_not yield_control
+      end
+    end
+
+    context 'when there is one substitution string' do
+      let(:str){ "echo `echo hi`" }
+
+      it "yields the command substitution string" do
+        expect { |b|
+          described_class.new.each_command_substitution_for(str, &b)
+        }.to yield_with_args OpenStruct.new(str:"echo hi", position:5..14)
+      end
+    end
+
+    context 'when there are multiple substitution strings' do
+      let(:str){ "echo `hi` foo $(world) `bye` $(world) foo" }
+
+      it "yields the command substitution string" do
+        expect { |b|
+          described_class.new.each_command_substitution_for(str, &b)
+        }.to yield_successive_args(
+          OpenStruct.new(str:"hi", position:5..9),
+          OpenStruct.new(str:"world", position:14..22),
+          OpenStruct.new(str:"bye", position:23..28),
+          OpenStruct.new(str:"world", position:29..37)
+        )
+      end
+    end
+
+    context 'when there are nested substitution strings' do
+      let(:str){ "echo `hi $(bye)`" }
+
+      it "only yields the top-level substitutions" do
+        expect { |b|
+          described_class.new.each_command_substitution_for(str, &b)
+        }.to yield_successive_args(
+          OpenStruct.new(str:"hi $(bye)", position:5..16),
+        )
+      end
     end
 
   end

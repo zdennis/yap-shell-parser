@@ -5,22 +5,39 @@
 #
 
 require 'racc/parser.rb'
+
+if $0 ==__FILE__
+  $LOAD_PATH.unshift File.dirname(__FILE__) + "/../../"
+  module Yap
+    module Shell
+      module Parser
+      end
+    end
+  end
+  require 'yap/shell/parser/nodes'
+end
+
 module Yap
   module Shell
     class ParserImpl < Racc::Parser
 
-module_eval(<<'...end grammar.y/module_eval...', 'grammar.y', 80)
+module_eval(<<'...end grammar.y/module_eval...', 'grammar.y', 101)
   include Yap::Shell::Parser::Nodes
+
+  def each_command_substitution_for(input, &blk)
+    Yap::Shell::Parser::Lexer.new.each_command_substitution_for(input, &blk)
+  end
+
 #=end
   def parse(str)
-    # @yydebug = true
+    @yydebug = true
 
     @q = Yap::Shell::Parser::Lexer.new.tokenize(str)
     # @q.push [false, '$']   # is optional from Racc 1.3.7
 # puts @q.inspect
 # puts "---- parse tree follows ----"
     __send__(Racc_Main_Parsing_Routine, _racc_setup(), false)
-    #do_parse
+    # do_parse
   end
 
   def next_token
@@ -31,78 +48,95 @@ module_eval(<<'...end grammar.y/module_eval...', 'grammar.y', 80)
 ##### State transition tables begin ###
 
 racc_action_table = [
-    15,    16,    29,    23,    17,    29,    15,    16,    24,    13,
-    17,     6,    15,    16,    27,    13,    17,     6,    15,    16,
-    31,    13,    17,     6,    15,    16,    21,    13,    17,     6,
-    15,    16,    20,    13,    19,     6,    19,    18,    36,    26,
-    37,    35,    37,    20,    21 ]
+    18,    19,    28,    22,    20,    34,    18,    19,    28,    16,
+    20,    11,    41,     6,    28,    16,    22,    11,    37,     6,
+    18,    19,    11,    43,    20,    24,    18,    19,    23,    16,
+    20,    11,    22,     6,    42,    16,    21,    11,    30,     6,
+    18,    19,    44,    31,    20,    42,    18,    19,    42,    16,
+    20,    11,    23,     6,    24,    16,    11,    11,   nil,     6,
+    18,    19,   nil,   nil,   nil,   nil,   nil,   nil,   nil,    33 ]
 
 racc_action_check = [
-     0,     0,    16,     9,     0,    15,     6,     6,     9,     0,
-     6,     0,    21,    21,    13,     6,    21,     6,    20,    20,
-    18,    21,    20,    21,    19,    19,     4,    20,    19,    20,
-    12,    12,     3,    19,    22,    19,     2,     1,    26,    12,
-    28,    22,    30,    32,    33 ]
+     0,     0,    19,    26,     0,    16,    11,    11,    18,     0,
+    11,     0,    26,     0,    10,    11,    29,    11,    21,    11,
+     6,     6,     5,    29,     6,     4,    24,    24,     3,     6,
+    24,     6,     2,     6,    27,    24,     1,    24,    12,    24,
+    23,    23,    33,    12,    23,    35,    22,    22,    36,    23,
+    22,    23,    38,    23,    39,    22,    40,    22,   nil,    22,
+    15,    15,   nil,   nil,   nil,   nil,   nil,   nil,   nil,    15 ]
 
 racc_action_pointer = [
-    -2,    37,    29,    24,    17,   nil,     4,   nil,   nil,    -2,
-   nil,   nil,    28,     2,   nil,     1,    -2,   nil,    20,    22,
-    16,    10,    27,   nil,   nil,   nil,    26,   nil,    36,   nil,
-    38,   nil,    35,    35,   nil,   nil,   nil,   nil ]
+    -2,    36,    25,    20,    16,     9,    18,   nil,   nil,   nil,
+    10,     4,    33,   nil,   nil,    58,    -7,   nil,     4,    -2,
+   nil,    18,    44,    38,    24,   nil,    -4,    30,   nil,     9,
+   nil,   nil,   nil,    30,   nil,    41,    44,   nil,    44,    45,
+    43,   nil,   nil,   nil,   nil ]
 
 racc_action_default = [
-   -28,   -28,    -1,    -3,    -5,    -7,   -28,    -9,   -10,   -12,
-   -14,   -15,   -16,   -28,   -20,   -21,   -23,   -27,   -28,   -28,
-   -28,   -28,   -28,   -11,   -13,   -17,   -28,   -19,   -22,   -25,
-   -24,    38,    -2,    -4,    -6,    -8,   -18,   -26 ]
+   -33,   -33,    -1,    -3,    -5,    -7,   -33,   -10,   -11,   -12,
+   -14,   -33,   -17,   -19,   -20,   -21,   -33,   -25,   -26,   -28,
+   -32,   -33,   -33,   -33,   -33,    -9,   -33,   -13,   -30,   -33,
+   -16,   -18,   -22,   -33,   -24,   -27,   -29,    45,    -2,    -4,
+    -6,    -8,   -31,   -15,   -23 ]
 
 racc_goto_table = [
-     2,    28,    30,    33,    32,    34,    22,    25,     1 ]
+    25,     2,    27,    40,    39,    38,     1,    26,    32,   nil,
+    35,    36,    29,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
+   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
+   nil,   nil,   nil,   nil,   nil,    25 ]
 
 racc_goto_check = [
-     2,    13,    13,     4,     3,     5,     2,    10,     1 ]
+     6,     2,    10,     5,     4,     3,     1,     2,    13,   nil,
+    10,    10,     2,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
+   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
+   nil,   nil,   nil,   nil,   nil,     6 ]
 
 racc_goto_pointer = [
-   nil,     8,     0,   -15,   -17,   -16,   nil,   nil,   nil,   nil,
-    -5,   nil,   nil,   -14 ]
+   nil,     6,     1,   -17,   -19,   -21,    -5,   nil,   nil,   nil,
+    -8,   nil,   nil,    -7,   nil,   nil ]
 
 racc_goto_default = [
    nil,   nil,   nil,     3,     4,     5,     7,     8,     9,    10,
-    11,    12,    14,   nil ]
+   nil,    12,    13,    14,    15,    17 ]
 
 racc_reduce_table = [
   0, 0, :racc_error,
-  1, 16, :_reduce_none,
-  3, 17, :_reduce_2,
-  1, 17, :_reduce_3,
-  3, 18, :_reduce_4,
   1, 18, :_reduce_none,
-  3, 19, :_reduce_6,
-  1, 19, :_reduce_none,
-  3, 20, :_reduce_8,
+  3, 19, :_reduce_2,
+  1, 19, :_reduce_3,
+  3, 20, :_reduce_4,
   1, 20, :_reduce_none,
-  1, 20, :_reduce_none,
-  2, 21, :_reduce_11,
+  3, 21, :_reduce_6,
   1, 21, :_reduce_none,
+  3, 22, :_reduce_8,
+  2, 22, :_reduce_9,
+  1, 22, :_reduce_none,
+  1, 22, :_reduce_none,
+  1, 22, :_reduce_none,
   2, 23, :_reduce_13,
   1, 23, :_reduce_none,
-  1, 23, :_reduce_none,
-  1, 23, :_reduce_none,
-  2, 24, :_reduce_17,
-  3, 26, :_reduce_18,
-  2, 26, :_reduce_19,
-  1, 25, :_reduce_none,
-  1, 27, :_reduce_21,
-  2, 27, :_reduce_22,
-  1, 27, :_reduce_23,
-  2, 27, :_reduce_24,
-  1, 28, :_reduce_25,
-  2, 28, :_reduce_26,
-  1, 22, :_reduce_27 ]
+  3, 26, :_reduce_15,
+  2, 24, :_reduce_16,
+  1, 24, :_reduce_none,
+  2, 28, :_reduce_18,
+  1, 28, :_reduce_none,
+  1, 28, :_reduce_none,
+  1, 28, :_reduce_none,
+  2, 29, :_reduce_22,
+  3, 31, :_reduce_23,
+  2, 31, :_reduce_24,
+  1, 30, :_reduce_none,
+  1, 32, :_reduce_26,
+  2, 32, :_reduce_27,
+  1, 32, :_reduce_28,
+  2, 32, :_reduce_29,
+  1, 27, :_reduce_30,
+  2, 27, :_reduce_31,
+  1, 25, :_reduce_32 ]
 
-racc_reduce_n = 28
+racc_reduce_n = 33
 
-racc_shift_n = 38
+racc_shift_n = 45
 
 racc_token_table = {
   false => 0,
@@ -118,10 +152,12 @@ racc_token_table = {
   :Redirection => 10,
   :LValue => 11,
   :RValue => 12,
-  "(" => 13,
-  ")" => 14 }
+  :BeginCommandSubstitution => 13,
+  :EndCommandSubstitution => 14,
+  "(" => 15,
+  ")" => 16 }
 
-racc_nt_base = 15
+racc_nt_base = 17
 
 racc_use_result_var = true
 
@@ -155,6 +191,8 @@ Racc_token_to_s_table = [
   "Redirection",
   "LValue",
   "RValue",
+  "BeginCommandSubstitution",
+  "EndCommandSubstitution",
   "\"(\"",
   "\")\"",
   "$start",
@@ -163,14 +201,16 @@ Racc_token_to_s_table = [
   "stmt",
   "pipeline",
   "stmts2",
+  "stmt_w_substitutions",
   "command_w_heredoc",
   "internal_eval",
+  "stmt_w_substitutions2",
+  "args",
   "command_w_redirects",
   "command_w_vars",
   "command",
   "vars",
-  "command2",
-  "args" ]
+  "command2" ]
 
 Racc_debug_parser = false
 
@@ -219,99 +259,124 @@ module_eval(<<'.,.,', 'grammar.y', 36)
   end
 .,.,
 
-# reduce 9 omitted
-
-# reduce 10 omitted
-
-module_eval(<<'.,.,', 'grammar.y', 41)
-  def _reduce_11(val, _values, result)
-     val[0].heredoc = val[1] ; result = val[0] 
+module_eval(<<'.,.,', 'grammar.y', 38)
+  def _reduce_9(val, _values, result)
+     result = ConcatenationNode.new(val[0], val[1]) 
     result
   end
 .,.,
 
+# reduce 10 omitted
+
+# reduce 11 omitted
+
 # reduce 12 omitted
 
-module_eval(<<'.,.,', 'grammar.y', 45)
+module_eval(<<'.,.,', 'grammar.y', 44)
   def _reduce_13(val, _values, result)
-     val[0].redirects << RedirectionNode.new(val[1].value, val[1].attrs[:target]) ; result = val[0] 
+     result = val[0] ; val[0].tail = val[1] 
     result
   end
 .,.,
 
 # reduce 14 omitted
 
-# reduce 15 omitted
-
-# reduce 16 omitted
+module_eval(<<'.,.,', 'grammar.y', 48)
+  def _reduce_15(val, _values, result)
+     result = CommandSubstitutionNode.new(val[1]) 
+    result
+  end
+.,.,
 
 module_eval(<<'.,.,', 'grammar.y', 51)
-  def _reduce_17(val, _values, result)
+  def _reduce_16(val, _values, result)
+     val[0].heredoc = val[1] ; result = val[0] 
+    result
+  end
+.,.,
+
+# reduce 17 omitted
+
+module_eval(<<'.,.,', 'grammar.y', 55)
+  def _reduce_18(val, _values, result)
+     val[0].redirects << RedirectionNode.new(val[1].value, val[1].attrs[:target]) ; result = val[0] 
+    result
+  end
+.,.,
+
+# reduce 19 omitted
+
+# reduce 20 omitted
+
+# reduce 21 omitted
+
+module_eval(<<'.,.,', 'grammar.y', 61)
+  def _reduce_22(val, _values, result)
      result = EnvWrapperNode.new(val[0], val[1]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 54)
-  def _reduce_18(val, _values, result)
+module_eval(<<'.,.,', 'grammar.y', 64)
+  def _reduce_23(val, _values, result)
      val[0].add_var(val[1].value, val[2].value) ; result = val[0] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 56)
-  def _reduce_19(val, _values, result)
+module_eval(<<'.,.,', 'grammar.y', 66)
+  def _reduce_24(val, _values, result)
      result = EnvNode.new(val[0].value, val[1].value) 
     result
   end
 .,.,
 
-# reduce 20 omitted
+# reduce 25 omitted
 
-module_eval(<<'.,.,', 'grammar.y', 61)
-  def _reduce_21(val, _values, result)
+module_eval(<<'.,.,', 'grammar.y', 71)
+  def _reduce_26(val, _values, result)
      result = CommandNode.new(val[0].value) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 63)
-  def _reduce_22(val, _values, result)
+module_eval(<<'.,.,', 'grammar.y', 73)
+  def _reduce_27(val, _values, result)
      result = CommandNode.new(val[0].value, val[1].flatten) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 65)
-  def _reduce_23(val, _values, result)
+module_eval(<<'.,.,', 'grammar.y', 75)
+  def _reduce_28(val, _values, result)
      result = CommandNode.new(val[0].value, literal:true) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 67)
-  def _reduce_24(val, _values, result)
+module_eval(<<'.,.,', 'grammar.y', 77)
+  def _reduce_29(val, _values, result)
      result = CommandNode.new(val[0].value, val[1].flatten, literal:true) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 70)
-  def _reduce_25(val, _values, result)
-     result = [val[0].value] 
+module_eval(<<'.,.,', 'grammar.y', 80)
+  def _reduce_30(val, _values, result)
+     result = [ArgumentNode.new(val[0].value)] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 72)
-  def _reduce_26(val, _values, result)
-     result = [val[0], val[1].value] 
+module_eval(<<'.,.,', 'grammar.y', 82)
+  def _reduce_31(val, _values, result)
+     result = [val[0], ArgumentNode.new(val[1].value)].flatten 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 75)
-  def _reduce_27(val, _values, result)
+module_eval(<<'.,.,', 'grammar.y', 85)
+  def _reduce_32(val, _values, result)
      result = InternalEvalNode.new(val[0].value) 
     result
   end
@@ -331,41 +396,20 @@ if $0 == __FILE__
   require 'yap/shell/parser/lexer'
   require 'yap/shell/parser/nodes'
     [
-    # "echo foo",
-    # "echo foo ; echo bar baz yep",
-    # "echo foo && echo bar baz yep",
-    # "echo foo && echo bar && ls foo && ls bar",
-    # "echo foo ; echo bar baz yep ; ls foo",
-    # "echo foo && echo bar ; ls baz",
-    # "echo foo && echo bar ; ls baz ; echo zach || echo gretchen",
-    # "echo foo | bar",
-    # "echo foo | bar && foo | bar",
-    # "foo && bar ; word || baz ; yep | grep -v foo",
-    # "( foo )",
-    # "( foo a b && bar c d )",
-    # "( foo a b && (bar c d | baz e f))",
-    # "((((foo))))",
-    # "foo -b -c ; (this ;that ;the; other  ;thing) && yep",
-    # "foo -b -c ; (this ;that && other  ;thing) && yep",
-    # "4 + 5",
-    # "!'hello' ; 4 - 4 && 10 + 3",
-    # "\\foo <<-EOT\nbar\nEOT",
-    # "ls | grep md | grep WISH",
-    # "(!upcase)",
-    # "echo foo > bar.txt",
-    # "ls -l > a.txt ; echo f 2> b.txt ; cat b &> c.txt ; du -sh 1>&2 1>hey.txt",
-    # "!Dir.chdir('..')",
-    # "FOO=123",
-    # "FOO=123 BAR=345",
-    # "FOO=abc bar=2314 car=14ab ls -l",
-    "FOO=abc BAR='hello world' ls -l ; CAR=f echo foo && say hi"
+    # "echo `echo hi`",
+    # "`git cbranch`",
+    # "`git cbranch`.bak",
+    # "echo `echo hi`",
+    "echo `echo hi` foo bar baz",
+    # "`hi``bye` `what`",
+    # "echo && `what` && where is `that`thing | `you know`",
     ].each do |src|
       puts 'parsing:'
       print src
       puts
       puts 'result:'
       require 'pp'
-      ast = Yap::Shell::Parser.new.parse(src)
+      ast = Yap::Shell::ParserImpl.new.parse(src)
       pp ast
     end
 
