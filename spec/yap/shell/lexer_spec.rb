@@ -918,4 +918,54 @@ describe Yap::Shell::Parser::Lexer do
 
   end
 
+  describe '#each_command_substitution_for' do
+    context 'when there are no substitutions' do
+      let(:str){ "echo " }
+
+      it "doesn't yield" do
+        expect { |b|
+          described_class.new.each_command_substitution_for(str, &b)
+        }.to_not yield_control
+      end
+    end
+
+    context 'when there is one substitution string' do
+      let(:str){ "echo `echo hi`" }
+
+      it "yields the command substitution string" do
+        expect { |b|
+          described_class.new.each_command_substitution_for(str, &b)
+        }.to yield_with_args OpenStruct.new(str:"echo hi", position:5..14)
+      end
+    end
+
+    context 'when there are multiple substitution strings' do
+      let(:str){ "echo `hi` foo $(world) `bye` $(world) foo" }
+
+      it "yields the command substitution string" do
+        expect { |b|
+          described_class.new.each_command_substitution_for(str, &b)
+        }.to yield_successive_args(
+          OpenStruct.new(str:"hi", position:5..9),
+          OpenStruct.new(str:"world", position:14..22),
+          OpenStruct.new(str:"bye", position:23..28),
+          OpenStruct.new(str:"world", position:29..37)
+        )
+      end
+    end
+
+    context 'when there are nested substitution strings' do
+      let(:str){ "echo `hi $(bye)`" }
+
+      it "only yields the top-level substitutions" do
+        expect { |b|
+          described_class.new.each_command_substitution_for(str, &b)
+        }.to yield_successive_args(
+          OpenStruct.new(str:"hi $(bye)", position:5..16),
+        )
+      end
+    end
+
+  end
+
 end

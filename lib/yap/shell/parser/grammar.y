@@ -99,14 +99,19 @@ end
 
 ---- inner
   include Yap::Shell::Parser::Nodes
+
+  def each_command_substitution_for(input, &blk)
+    Yap::Shell::Parser::Lexer.new.each_command_substitution_for(input, &blk)
+  end
+
 #=end
   def parse(str)
     @yydebug = true
 
     @q = Yap::Shell::Parser::Lexer.new.tokenize(str)
     # @q.push [false, '$']   # is optional from Racc 1.3.7
-puts @q.inspect
-puts "---- parse tree follows ----"
+# puts @q.inspect
+# puts "---- parse tree follows ----"
     __send__(Racc_Main_Parsing_Routine, _racc_setup(), false)
     # do_parse
   end
