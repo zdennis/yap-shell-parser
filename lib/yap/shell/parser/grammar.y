@@ -36,14 +36,17 @@ pipeline : pipeline Pipe stmts2
 stmts2 : '(' stmts ')'
     { result = val[1] }
   | stmts2 stmt_w_substitutions
+    { result = ConcatenationNode.new(val[0], val[1]) }
   | stmt_w_substitutions
   | command_w_heredoc
   | internal_eval
 
 stmt_w_substitutions : stmt_w_substitutions2 args
+    { result = val[0] ; val[0].tail = val[1] }
   | stmt_w_substitutions2
 
 stmt_w_substitutions2 : BeginCommandSubstitution stmts EndCommandSubstitution
+  { result = CommandSubstitutionNode.new(val[1]) }
 
 command_w_heredoc : command_w_redirects Heredoc
     { val[0].heredoc = val[1] ; result = val[0] }
@@ -75,9 +78,9 @@ command2: Command
     { result = CommandNode.new(val[0].value, val[1].flatten, literal:true) }
 
 args : Argument
-    { result = [val[0].value] }
+    { result = [ArgumentNode.new(val[0].value)] }
   | args Argument
-    { result = [val[0], val[1].value] }
+    { result = [val[0], ArgumentNode.new(val[1].value)].flatten }
 
 internal_eval : InternalEval
     { result = InternalEvalNode.new(val[0].value) }
@@ -102,8 +105,8 @@ end
 
     @q = Yap::Shell::Parser::Lexer.new.tokenize(str)
     # @q.push [false, '$']   # is optional from Racc 1.3.7
-# puts @q.inspect
-# puts "---- parse tree follows ----"
+puts @q.inspect
+puts "---- parse tree follows ----"
     __send__(Racc_Main_Parsing_Routine, _racc_setup(), false)
     # do_parse
   end
@@ -119,7 +122,13 @@ if $0 == __FILE__
   require 'yap/shell/parser/lexer'
   require 'yap/shell/parser/nodes'
     [
-    "(foo a b && (bar c d | baz e f))"
+    # "echo `echo hi`",
+    # "`git cbranch`",
+    # "`git cbranch`.bak",
+    # "echo `echo hi`",
+    "echo `echo hi` foo bar baz",
+    # "`hi``bye` `what`",
+    # "echo && `what` && where is `that`thing | `you know`",
     ].each do |src|
       puts 'parsing:'
       print src

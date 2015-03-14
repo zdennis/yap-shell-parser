@@ -6,6 +6,24 @@ module Yap::Shell
       end
     end
 
+    class ArgumentNode
+      include Visitor
+
+      attr_reader :lvalue
+
+      def initialize(lvalue)
+        @lvalue = lvalue
+      end
+
+      def inspect
+        to_s
+      end
+
+      def to_s
+        "ArgumentNode(#{lvalue.inspect})"
+      end
+    end
+
     class AssignmentNode
       include Visitor
 
@@ -201,9 +219,30 @@ module Yap::Shell
       end
     end
 
+    class ConcatenationNode
+      include Visitor
+
+      attr_reader :left, :right
+
+      def initialize(left, right)
+        @left = left
+        @right = right
+      end
+
+      def to_s(indent:0)
+        "ConcatenationNode(left: #{left.to_s}, right: #{right.to_s})"
+      end
+
+      def inspect
+        to_s
+      end
+
+    end
+
     class CommandSubstitutionNode
       include Visitor
 
+      attr_accessor :tail
       attr_reader :node
 
       def initialize(node)
@@ -211,7 +250,7 @@ module Yap::Shell
       end
 
       def to_s(indent:0)
-        "CommandSubstitutionNode(#{@node.to_s})"
+        "CommandSubstitutionNode(#{@node.to_s}, tail: #{tail.inspect})"
       end
 
       def inspect

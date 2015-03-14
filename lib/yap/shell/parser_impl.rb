@@ -15,7 +15,6 @@ if $0 ==__FILE__
     end
   end
   require 'yap/shell/parser/nodes'
-
 end
 
 module Yap
@@ -30,8 +29,8 @@ module_eval(<<'...end grammar.y/module_eval...', 'grammar.y', 101)
 
     @q = Yap::Shell::Parser::Lexer.new.tokenize(str)
     # @q.push [false, '$']   # is optional from Racc 1.3.7
-# puts @q.inspect
-# puts "---- parse tree follows ----"
+puts @q.inspect
+puts "---- parse tree follows ----"
     __send__(Racc_Main_Parsing_Routine, _racc_setup(), false)
     # do_parse
   end
@@ -105,13 +104,13 @@ racc_reduce_table = [
   3, 21, :_reduce_6,
   1, 21, :_reduce_none,
   3, 22, :_reduce_8,
-  2, 22, :_reduce_none,
+  2, 22, :_reduce_9,
   1, 22, :_reduce_none,
   1, 22, :_reduce_none,
   1, 22, :_reduce_none,
-  2, 23, :_reduce_none,
+  2, 23, :_reduce_13,
   1, 23, :_reduce_none,
-  3, 26, :_reduce_none,
+  3, 26, :_reduce_15,
   2, 24, :_reduce_16,
   1, 24, :_reduce_none,
   2, 28, :_reduce_18,
@@ -255,7 +254,12 @@ module_eval(<<'.,.,', 'grammar.y', 36)
   end
 .,.,
 
-# reduce 9 omitted
+module_eval(<<'.,.,', 'grammar.y', 38)
+  def _reduce_9(val, _values, result)
+     result = ConcatenationNode.new(val[0], val[1]) 
+    result
+  end
+.,.,
 
 # reduce 10 omitted
 
@@ -263,13 +267,23 @@ module_eval(<<'.,.,', 'grammar.y', 36)
 
 # reduce 12 omitted
 
-# reduce 13 omitted
+module_eval(<<'.,.,', 'grammar.y', 44)
+  def _reduce_13(val, _values, result)
+     result = val[0] ; val[0].tail = val[1] 
+    result
+  end
+.,.,
 
 # reduce 14 omitted
 
-# reduce 15 omitted
-
 module_eval(<<'.,.,', 'grammar.y', 48)
+  def _reduce_15(val, _values, result)
+     result = CommandSubstitutionNode.new(val[1]) 
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'grammar.y', 51)
   def _reduce_16(val, _values, result)
      val[0].heredoc = val[1] ; result = val[0] 
     result
@@ -278,7 +292,7 @@ module_eval(<<'.,.,', 'grammar.y', 48)
 
 # reduce 17 omitted
 
-module_eval(<<'.,.,', 'grammar.y', 52)
+module_eval(<<'.,.,', 'grammar.y', 55)
   def _reduce_18(val, _values, result)
      val[0].redirects << RedirectionNode.new(val[1].value, val[1].attrs[:target]) ; result = val[0] 
     result
@@ -291,21 +305,21 @@ module_eval(<<'.,.,', 'grammar.y', 52)
 
 # reduce 21 omitted
 
-module_eval(<<'.,.,', 'grammar.y', 58)
+module_eval(<<'.,.,', 'grammar.y', 61)
   def _reduce_22(val, _values, result)
      result = EnvWrapperNode.new(val[0], val[1]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 61)
+module_eval(<<'.,.,', 'grammar.y', 64)
   def _reduce_23(val, _values, result)
      val[0].add_var(val[1].value, val[2].value) ; result = val[0] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 63)
+module_eval(<<'.,.,', 'grammar.y', 66)
   def _reduce_24(val, _values, result)
      result = EnvNode.new(val[0].value, val[1].value) 
     result
@@ -314,49 +328,49 @@ module_eval(<<'.,.,', 'grammar.y', 63)
 
 # reduce 25 omitted
 
-module_eval(<<'.,.,', 'grammar.y', 68)
+module_eval(<<'.,.,', 'grammar.y', 71)
   def _reduce_26(val, _values, result)
      result = CommandNode.new(val[0].value) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 70)
+module_eval(<<'.,.,', 'grammar.y', 73)
   def _reduce_27(val, _values, result)
      result = CommandNode.new(val[0].value, val[1].flatten) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 72)
+module_eval(<<'.,.,', 'grammar.y', 75)
   def _reduce_28(val, _values, result)
      result = CommandNode.new(val[0].value, literal:true) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 74)
+module_eval(<<'.,.,', 'grammar.y', 77)
   def _reduce_29(val, _values, result)
      result = CommandNode.new(val[0].value, val[1].flatten, literal:true) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'grammar.y', 77)
+module_eval(<<'.,.,', 'grammar.y', 80)
   def _reduce_30(val, _values, result)
-     result = [val[0].value] 
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'grammar.y', 79)
-  def _reduce_31(val, _values, result)
-     result = [val[0], val[1].value] 
+     result = [ArgumentNode.new(val[0].value)] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'grammar.y', 82)
+  def _reduce_31(val, _values, result)
+     result = [val[0], ArgumentNode.new(val[1].value)].flatten 
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'grammar.y', 85)
   def _reduce_32(val, _values, result)
      result = InternalEvalNode.new(val[0].value) 
     result
@@ -377,7 +391,13 @@ if $0 == __FILE__
   require 'yap/shell/parser/lexer'
   require 'yap/shell/parser/nodes'
     [
-    "(foo a b && (bar c d | baz e f))"
+    # "echo `echo hi`",
+    # "`git cbranch`",
+    # "`git cbranch`.bak",
+    # "echo `echo hi`",
+    "echo `echo hi` foo bar baz",
+    # "`hi``bye` `what`",
+    # "echo && `what` && where is `that`thing | `you know`",
     ].each do |src|
       puts 'parsing:'
       print src
