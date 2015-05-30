@@ -199,25 +199,32 @@ module Yap::Shell
     def argument_token
       if @looking_for_args
         str = ''
-        i = 0
+        characters_read = 0
+        prev_char = ''
         loop do
-          ch = @chunk[i]
+          ch = @chunk[characters_read]
           if %w(' ").include?(ch)
-            result = process_string @chunk[i..-1], ch
+            result = process_string @chunk[characters_read..-1], ch
             str << result.str
-            i += result.consumed_length
-          elsif ch =~ /[\s\|;&\)]/
+            characters_read += result.consumed_length
+          elsif prev_char != '\\' && ch =~ /[\s\|;&\)]/
             break
           else
             str << ch
-            i += 1
+            characters_read += 1
           end
 
-          break if i >= @chunk.length
+          break if characters_read >= @chunk.length
+
+          prev_char = ch
         end
 
-        token :Argument, str
-        i
+        if characters_read > 0
+          token :Argument, str
+          characters_read
+        else
+          nil
+        end
       end
     end
 
