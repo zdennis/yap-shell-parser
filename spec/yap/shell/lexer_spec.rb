@@ -116,6 +116,14 @@ describe Yap::Shell::Parser::Lexer do
       ]}
     end
 
+    describe "commands with a escaped args: ls some\ dir" do
+      let(:str){ 'ls some\ dir' }
+      it { should eq [
+        t(:Command, "ls", lineno:0),
+        t(:Argument, 'some\ dir', lineno:0)
+      ]}
+    end
+
     describe "can contain asterisks: ls foo* b*r" do
       let(:str){ "ls foo* b*r" }
       it { should eq [
