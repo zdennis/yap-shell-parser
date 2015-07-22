@@ -23,6 +23,16 @@ describe Yap::Shell::Parser do
     end
   end
 
+  describe '.each_command_substitution_for' do
+    let(:str){ "echo `echo hi`" }
+
+    it "yields the command substitution string" do
+      expect { |b|
+        parser.each_command_substitution_for(str, &b)
+      }.to yield_with_args OpenStruct.new(str:"echo hi", position:5..14)
+    end
+  end
+
   it_parses "ls"
   it_parses "echo foo"
   it_parses "echo foo ; echo bar baz yep"

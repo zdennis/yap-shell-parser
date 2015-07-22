@@ -10,6 +10,10 @@ module Yap
       rescue Racc::ParseError => ex
         raise ParseError, "Message: #{ex.message}\nInput: #{input}"
       end
+
+      def self.each_command_substitution_for(input, &blk)
+        Yap::Shell::Parser::Lexer.new.each_command_substitution_for(input, &blk)
+      end
     end
   end
 end

@@ -100,10 +100,6 @@ end
 ---- inner
   include Yap::Shell::Parser::Nodes
 
-  def each_command_substitution_for(input, &blk)
-    Yap::Shell::Parser::Lexer.new.each_command_substitution_for(input, &blk)
-  end
-
 #=end
   def parse(str)
     @yydebug = true
