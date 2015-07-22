@@ -1,8 +1,14 @@
+require 'racc/parser'
+
 module Yap
   module Shell
     module Parser
-      def self.new
-        Yap::Shell::ParserImpl.new
+      class ParseError < ::StandardError ; end
+
+      def self.parse(input)
+        Yap::Shell::ParserImpl.new.parse(input)
+      rescue Racc::ParseError => ex
+        raise ParseError, "Message: #{ex.message}\nInput: #{input}"
       end
     end
   end

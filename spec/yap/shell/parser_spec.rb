@@ -3,18 +3,22 @@ require 'yap/shell/parser'
 require 'pry'
 
 describe Yap::Shell::Parser do
-  subject(:parser){ Yap::Shell::Parser.new }
+  subject(:parser){ Yap::Shell::Parser }
 
   def self.it_parses(str)
     context "#{str.inspect}" do
       it "parses" do
-        expect do
-          begin
-            parser.parse(str)
-          # rescue => ex
-            # raise "Parser error:\n\t#{str}\n\n#{ex.message}\n#{ex.backtrace.join("\n")}"
-          end
-        end.to_not raise_error
+        expect { parser.parse(str) }.to_not raise_error
+      end
+    end
+  end
+
+  def self.it_errors(str)
+    context "#{str.inspect}" do
+      it "raises a Yap::Shell::Parser::ParseError" do
+        expect {
+          parser.parse(str)
+        }.to raise_error(Yap::Shell::Parser::ParseError)
       end
     end
   end
@@ -49,9 +53,11 @@ describe Yap::Shell::Parser do
   it_parses "FOO=abc bar=2314 car=14ab ls -l"
   it_parses "FOO=abc BAR='hello world' ls -l ; CAR=f echo foo && say hi"
   it_parses "`git cbranch`"
-  it_parses "`git cbranch`.bak"  # TODO THIS NEEDS TO MAYBE NOT WORK?
+  it_parses "`git cbranch`.bak"
   it_parses "echo `echo hi`"
   it_parses "echo `echo hi` foo"
   it_parses "`hi``bye` `what`"
   it_parses "echo && `what` && where is `that`thing | `you know`"
+
+  it_errors "ls ()"
 end
