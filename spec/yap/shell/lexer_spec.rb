@@ -63,6 +63,13 @@ describe Yap::Shell::Parser::Lexer do
         t(:Command, "foo/ba*", lineno:0)
       ]}
     end
+
+    describe "can end with exclamation points" do
+      let(:str){ "reload!" }
+      it { should eq [
+        t(:Command, "reload!", lineno:0)
+      ]}
+    end
   end
 
   describe "literal commands" do

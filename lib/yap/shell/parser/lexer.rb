@@ -34,7 +34,7 @@ module Yap::Shell
     end
 
     COMMAND_SUBSTITUTION   = /\A(`|\$\()/
-    ARG                    = /[^\s;\|\(\)\{\}\[\]\&\!\\\<`][^\s;\|\(\)\{\}\[\]\&\!\>\<`]*/
+    ARG                    = /[^\s;\|\(\)\{\}\[\]\&\!\\\<`][^\s;\|\(\)\{\}\[\]\&\>\<`]*/
     COMMAND                = /\A(#{ARG})/
     LITERAL_COMMAND        = /\A\\(#{ARG})/
     WHITESPACE             = /\A[^\n\S]+/
