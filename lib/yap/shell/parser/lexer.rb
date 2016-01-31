@@ -2,6 +2,9 @@ require 'ostruct'
 
 module Yap::Shell
   class Parser::Lexer
+    class Error < ::StandardError ; end
+    class HeredocMissingEndDelimiter < Error ; end
+
     class Token
       include Comparable
 
@@ -43,7 +46,7 @@ module Yap::Shell
     STATEMENT_TERMINATOR   = /\A(;)/
     PIPE_TERMINATOR        = /\A(\|)/
     CONDITIONAL_TERMINATOR = /\A(&&|\|\|)/
-    HEREDOC                = /\A<<-?([A-z0-9]+)\s*^(.*)?(^\s*\1\s*$)/m
+    HEREDOC_START          = /\A<<-?([A-z0-9]+)\s*\n/
     INTERNAL_EVAL          = /\A(?:(\!)|([0-9]+))/
     SUBGROUP               = /\A(\(|\))/
     REDIRECTION            = /\A(([12]?>&?[12]?)\s*(?![12]>)(#{ARG})?)/
@@ -149,9 +152,31 @@ module Yap::Shell
     end
 
     def heredoc_token
-      if md=@chunk.match(HEREDOC)
-        token :Heredoc, md[2]
-        md[0].length
+      if md=@chunk.match(HEREDOC_START)
+        delimiter = md[1]
+        str = @chunk[md[0].length..-1]
+        consumed_length = md[0].length
+
+        delimeter_regex = Regexp.escape(delimiter)
+
+        contents = ""
+        found_ending_delimiter = false
+        str.lines.each do |line|
+          if md=line.match(/^(.*?)\s*#{delimeter_regex}\s*$/m)
+            contents << $1
+            found_ending_delimiter = true
+          else
+            contents << line
+          end
+          consumed_length += line.length
+        end
+
+        unless found_ending_delimiter
+          raise HeredocMissingEndDelimiter, "Missing end delimiter on #{@chunk}"
+        end
+
+        token :Heredoc, contents
+        consumed_length
       end
     end
 

@@ -354,12 +354,26 @@ describe Yap::Shell::Parser::Lexer do
       ]}
     end
 
-    describe "the ending line cannot have non-whitespace characters beyond the delimiter" do
-      let(:str){ "foo <<L337\nhere\nwe\ngo\n this is bad L337"}
+    describe <<-DESCRIPTION do
+      the delimiter doesn't have to be on its own line, just be the last thing.
+      It also will ignore any whitespace leading up to the delimiter.
+    DESCRIPTION
+      let(:str){ "foo <<L337\nhere\nwe\ngo\n this is great L337"}
+      it { should eq [
+        t(:Command, "foo", lineno:0),
+        t(:Heredoc, "here\nwe\ngo\n this is great", lineno:0)
+      ]}
+    end
+
+    describe "when there is no matching end delimiter found" do
+      let(:str){ "foo <<L337\nhere\nwe\ngo"}
       it "raises an error" do
-        expect{ subject }.to raise_error
+        expect do
+          subject
+        end.to raise_error(Yap::Shell::Parser::Lexer::HeredocMissingEndDelimiter)
       end
     end
+
   end
 
   context "internal evaluations" do
