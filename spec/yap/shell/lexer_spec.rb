@@ -13,6 +13,17 @@ describe Yap::Shell::Parser::Lexer do
     it { should eq [] }
   end
 
+  describe "string with newlines" do
+    let(:str){ "ls \n\nlib:\ntasks\nyap\nyap.rb" }
+    it { should eq [
+      t(:Command, "ls", lineno:0),
+      t(:Argument, "lib:", lineno:0),
+      t(:Argument, "tasks", lineno:0),
+      t(:Argument, "yap", lineno:0),
+      t(:Argument, "yap.rb", lineno:0)
+    ]}
+  end
+
   describe "env variables" do
     let(:str){ "foo $baz" }
     it { should eq [

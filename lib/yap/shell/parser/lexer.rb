@@ -40,7 +40,7 @@ module Yap::Shell
     ARG                    = /[^\s;\|\(\)\{\}\[\]\&\!\\\<`][^\s;\|\(\)\{\}\[\]\&\>\<`]*/
     COMMAND                = /\A(#{ARG})/
     LITERAL_COMMAND        = /\A\\(#{ARG})/
-    WHITESPACE             = /\A[^\n\S]+/
+    WHITESPACE             = /\A\s+/
     LH_ASSIGNMENT          = /\A(([A-z_][\w]*)=)/
     RH_VALUE               = /\A(\S+)/
     STATEMENT_TERMINATOR   = /\A(;)/
