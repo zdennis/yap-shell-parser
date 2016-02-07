@@ -258,24 +258,46 @@ module Yap::Shell
       end
     end
 
-    class NumericalRangeNode
+    class BlockNode
       include Visitor
 
-      attr_accessor :head, :tail
-      attr_reader :range, :reference
+      attr_accessor :head, :tail, :params
 
-      def initialize(head, tail, reference=nil)
+      def initialize(head, params: [])
         @head = head
-        @range = head.value
-        @tail = tail
-        @reference = reference
+        @tail = nil
+        @params = params
       end
 
       def to_s(indent:0)
         if @counter_reference
-          "NumericalRangeNode(#{@range.to_s}, counter_variable: #{@reference}, tail: #{tail.inspect})"
+          "BlockNode(#{@head.inspect}, params: #{@params.inspect})"
         else
-          "NumericalRangeNode(#{@range.to_s}, tail: #{tail.inspect})"
+          "BlockNode(#{@head.inspect}, params: #{@params.inspect})"
+        end
+      end
+
+      def inspect
+        to_s
+      end
+    end
+
+    class RangeNode
+      include Visitor
+
+      attr_accessor :head, :tail
+      attr_reader :range
+
+      def initialize(head, tail)
+        @head = head
+        @tail = tail
+      end
+
+      def to_s(indent:0)
+        if @counter_reference
+          "Range(#{@head.inspect}, tail: #{tail.inspect})"
+        else
+          "Range(#{@head.inspect}, tail: #{tail.inspect})"
         end
       end
 

@@ -68,9 +68,10 @@ describe Yap::Shell::Parser do
   it_parses "echo `echo hi` foo"
   it_parses "`hi``bye` `what`"
   it_parses "echo && `what` && where is `that`thing | `you know`"
-  it_parses "0..3: echo hi"
-  it_parses "0..3 as n: echo hi $n"
-  it_parses "echo hi ; 0..3 as n: echo hi $n"
+  it_parses "(0..3): echo hi"
+  it_parses "(0..3) as n: echo hi $n"
+  # it_parses "echo hi ; (0..3) as n: echo hi $n"
+  # it_parses "echo hi ; 0..3 as n: echo hi $n"
 
   it_errors "ls ()"
 end

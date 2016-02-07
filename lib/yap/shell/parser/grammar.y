@@ -3,7 +3,7 @@
 # convert Array-like string into Ruby's Array.
 
 class Yap::Shell::ParserImpl
-  token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe Redirection LValue RValue BeginCommandSubstitution EndCommandSubstitution NumericalRange CounterVariable
+  token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe Redirection LValue RValue BeginCommandSubstitution EndCommandSubstitution Range BlockBegin BlockEnd BlockParam
   #
   # prechigh
   # #   left '**' '*' '/' '%'
@@ -19,12 +19,6 @@ class Yap::Shell::ParserImpl
 rule
 
 program : stmts
-  | repetition_stmt
-
-repetition_stmt: NumericalRange stmts
-    { result = NumericalRangeNode.new(val[0], val[1]) }
-  | NumericalRange CounterVariable stmts
-    { result = NumericalRangeNode.new(val[0], val[2], val[1]) }
 
 stmts : stmts Separator stmt
     { result = StatementsNode.new(val[0], val[2]) }
@@ -46,6 +40,12 @@ stmts2 : '(' stmts ')'
   | stmt_w_substitutions
   | command_w_heredoc
   | internal_eval
+  | range_stmt
+
+range_stmt : Range BlockBegin stmts BlockEnd
+    { result = RangeNode.new(val[0], BlockNode.new(val[2]))}
+  | Range BlockBegin BlockParam stmts BlockEnd
+    { result = RangeNode.new(val[0], BlockNode.new(val[3], params: [val[2].value]))}
 
 stmt_w_substitutions : stmt_w_substitutions2 args
     { result = val[0] ; val[0].tail = val[1] }
@@ -125,6 +125,7 @@ end
 ---- footer
 
 if $0 == __FILE__
+  require 'pry'
   $LOAD_PATH.unshift File.dirname(__FILE__) + "/lib/"
   require 'yap/shell/parser/lexer'
   require 'yap/shell/parser/nodes'
@@ -133,7 +134,8 @@ if $0 == __FILE__
     # "`git cbranch`",
     # "`git cbranch`.bak",
     # "echo `echo hi`",
-    "0..3 as n: echo hi",
+    "(0..3) : echo hi",
+    "(0..3) as n : echo hi",
     # "`hi``bye` `what`",
     # "echo && `what` && where is `that`thing | `you know`",
     ].each do |src|
