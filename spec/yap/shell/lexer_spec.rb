@@ -61,6 +61,19 @@ describe Yap::Shell::Parser::Lexer do
         end
       end
 
+      describe "<number>.times w/block" do
+        describe "3.times { |n| echo hi }" do
+          it { should eq [
+            t(:Range, (1..3), lineno:0),
+            t(:BlockBegin, '{', lineno: 0),
+            t(:BlockParam, 'n', lineno: 0),
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "hi", lineno:0),
+            t(:BlockEnd, '}', lineno:0)
+          ]}
+        end
+      end
+
       describe "<number>.times (no reference variable)" do
         describe "3.times: echo hi" do
           it { should eq [
@@ -138,7 +151,6 @@ describe Yap::Shell::Parser::Lexer do
         describe "(0..3).each { echo foo }" do
           it { should eq [
             t(:Range, (0..3), lineno:0),
-            t(:Argument, '.each', lineno: 0),
             t(:BlockBegin, '{', lineno:0),
             t(:Command, "echo", lineno:0),
             t(:Argument, "foo", lineno:0),
@@ -150,7 +162,6 @@ describe Yap::Shell::Parser::Lexer do
           describe "     (0..3).each     {      echo foo   }     " do
             it { should eq [
               t(:Range, (0..3), lineno:0),
-              t(:Argument, '.each', lineno: 0),
               t(:BlockBegin, '{', lineno:0),
               t(:Command, "echo", lineno:0),
               t(:Argument, "foo", lineno:0),

@@ -52,10 +52,11 @@ module Yap::Shell
     REDIRECTION            = /\A(([12]?>&?[12]?)\s*(?![12]>)(#{ARG})?)/
     REDIRECTION2           = /\A((&>|<)\s*(#{ARG}))/
 
-    NUMERIC_RANGE              = /\A\(((\d+)\.\.(\d+))\)(?=\.)?/
+    NUMERIC_RANGE              = /\A\(((\d+)\.\.(\d+))\)(\.each)?/
     NUMERIC_RANGE_W_CALL      = /\A\(((\d+)\.\.(\d+))\)(\.each)?\s*:\s*/
     NUMERIC_RANGE_W_PARAM      = /\A(\((\d+)\.\.(\d+))\)\s+as\s+([A-z0-9]+)\s*:\s*/
-    NUMERIC_REPETITION         = /\A((\d+)(\.times))\s*:\s*/
+    NUMERIC_REPETITION         = /\A((\d+)(\.times))\s*/
+    NUMERIC_REPETITION_2       = /\A((\d+)(\.times))\s*:\s*/
     NUMERIC_REPETITION_W_PARAM = /\A((\d+)(\.times))\s+as\s+([A-z0-9]+)\s*:\s*/
 
     BLOCK_BEGIN = /\A\s*(\{)\s*(?:\|\s*([A-z0-9]+)\s*\|)?/
@@ -173,7 +174,7 @@ module Yap::Shell
         @tokens_to_add_when_done << [:BlockEnd, '}']
         md[0].length
 
-      elsif md=@chunk.match(NUMERIC_REPETITION)
+      elsif md=@chunk.match(NUMERIC_REPETITION_2)
         start, stop = 1, md[2].to_i
         token :Range, (start..stop)
         token :BlockBegin, '{'
@@ -188,8 +189,12 @@ module Yap::Shell
         @tokens_to_add_when_done << [:BlockEnd, '}']
         md[0].length
 
+      elsif md=@chunk.match(NUMERIC_REPETITION)
+        start, stop = 1, md[2].to_i
+        token :Range, (start..stop)
+        md[0].length
+
       elsif md=@chunk.match(NUMERIC_RANGE)
-        @looking_for_args = true
         start, stop = md[2].to_i, md[3].to_i
         token :Range, (start..stop)
         md[0].length
