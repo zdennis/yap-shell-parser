@@ -3,6 +3,7 @@ require 'yap/shell/parser/lexer'
 
 describe Yap::Shell::Parser::Lexer do
   subject { described_class.new.tokenize(str) }
+  let(:str){ self.class.description }
 
   def t(tag, val, lineno:0, attrs:{})
     [tag, Yap::Shell::Parser::Lexer::Token.new(tag, val, lineno:lineno, attrs:attrs)]
@@ -11,113 +12,152 @@ describe Yap::Shell::Parser::Lexer do
   describe "looping constructs" do
     describe "start of line" do
       describe "numerical range (no reference variable)" do
-        describe "0..3: echo hi" do
-          let(:str){ "0..3: echo hi" }
+        describe "(0..3): echo hi" do
           it { should eq [
-            t(:NumericalRange, (0..3), lineno:0),
+            t(:Range, (0..3), lineno:0),
+            t(:BlockBegin, '{', lineno: 0),
             t(:Command, "echo", lineno:0),
-            t(:Argument, "hi", lineno:0)
+            t(:Argument, "hi", lineno:0),
+            t(:BlockEnd, '}', lineno: 0)
           ]}
         end
 
         describe "whitespace before/after the range doesn't matter" do
-          let(:str){ "    0..3     : echo hi" }
-          it { should eq [
-            t(:NumericalRange, (0..3), lineno:0),
-            t(:Command, "echo", lineno:0),
-            t(:Argument, "hi", lineno:0)
-          ]}
+          describe "    (0..3)     : echo hi" do
+            it { should eq [
+              t(:Range, (0..3), lineno:0),
+              t(:BlockBegin, '{', lineno: 0),
+              t(:Command, "echo", lineno:0),
+              t(:Argument, "hi", lineno:0),
+              t(:BlockEnd, '}', lineno: 0)
+            ]}
+          end
         end
       end
 
       describe "numerical range $n (reference variable)" do
-        describe "0..3 as n: echo " do
-          let(:str){ "0..3 as n: echo $n" }
+        describe "(0..3) as n: echo $n" do
           it { should eq [
-            t(:NumericalRange, (0..3), lineno:0),
-            t(:CounterVariable, "n", lineno:0),
+            t(:Range, (0..3), lineno:0),
+            t(:BlockBegin, '{', lineno: 0),
+            t(:BlockParam, 'n', lineno: 0),
             t(:Command, "echo", lineno:0),
-            t(:Argument, "$n", lineno:0)
+            t(:Argument, "$n", lineno:0),
+            t(:BlockEnd, '}', lineno:0)
           ]}
         end
 
         describe "whitespace before/after the range/reference doesn't matter" do
-          let(:str){ "    0..3  as    n   : echo $n" }
-          it { should eq [
-            t(:NumericalRange, (0..3), lineno:0),
-            t(:CounterVariable, "n", lineno:0),
-            t(:Command, "echo", lineno:0),
-            t(:Argument, "$n", lineno:0)
-          ]}
+          describe "    (0..3)  as    n   : echo $n" do
+            it { should eq [
+              t(:Range, (0..3), lineno:0),
+              t(:BlockBegin, '{', lineno: 0),
+              t(:BlockParam, 'n', lineno: 0),
+              t(:Command, "echo", lineno:0),
+              t(:Argument, "$n", lineno:0),
+              t(:BlockEnd, '}', lineno:0)
+            ]}
+          end
         end
       end
 
       describe "<number>.times (no reference variable)" do
         describe "3.times: echo hi" do
-          let(:str){ "3.times: echo hi" }
           it { should eq [
-            t(:NumericalRange, (0..2), lineno:0),
+            t(:Range, (1..3), lineno:0),
+            t(:BlockBegin, '{', lineno: 0),
             t(:Command, "echo", lineno:0),
-            t(:Argument, "hi", lineno:0)
+            t(:Argument, "hi", lineno:0),
+            t(:BlockEnd, '}', lineno:0)
           ]}
         end
 
         describe "whitespace before/after the range doesn't matter" do
-          let(:str){ "    3.times    : echo hi" }
-          it { should eq [
-            t(:NumericalRange, (0..2), lineno:0),
-            t(:Command, "echo", lineno:0),
-            t(:Argument, "hi", lineno:0)
-          ]}
+          describe "    3.times    : echo hi" do
+            it { should eq [
+              t(:Range, (1..3), lineno:0),
+              t(:BlockBegin, '{', lineno: 0),
+              t(:Command, "echo", lineno:0),
+              t(:Argument, "hi", lineno:0),
+              t(:BlockEnd, '}', lineno:0)
+            ]}
+          end
         end
       end
 
       describe "<number>.times $n (w/reference variable)" do
-        describe "3.times as n: echo hi" do
-          let(:str){ "3.times as n: echo hi" }
+        describe "3.times as n: echo $n" do
           it { should eq [
-            t(:NumericalRange, (0..2), lineno:0),
-            t(:CounterVariable, "n", lineno:0),
+            t(:Range, (1..3), lineno:0),
+            t(:BlockBegin, '{', lineno: 0),
+            t(:BlockParam, 'n', lineno: 0),
             t(:Command, "echo", lineno:0),
-            t(:Argument, "hi", lineno:0)
+            t(:Argument, "$n", lineno:0),
+            t(:BlockEnd, '}', lineno:0)
           ]}
         end
 
         describe "whitespace before/after the range/reference doesn't matter" do
-          let(:str){ "    3.times  as   n  : echo $n" }
-          it { should eq [
-            t(:NumericalRange, (0..2), lineno:0),
-            t(:CounterVariable, "n", lineno:0),
-            t(:Command, "echo", lineno:0),
-            t(:Argument, "$n", lineno:0)
-          ]}
+          describe "    3.times  as   n  : echo $n" do
+            it { should eq [
+              t(:Range, (1..3), lineno:0),
+              t(:BlockBegin, '{', lineno: 0),
+              t(:BlockParam, 'n', lineno: 0),
+              t(:Command, "echo", lineno:0),
+              t(:Argument, "$n", lineno:0),
+              t(:BlockEnd, '}', lineno:0)
+            ]}
+          end
         end
       end
     end
 
     describe "statement mixed with other statements" do
       describe "numerical range (no reference variable)" do
-        describe "echo start ; (0..3).each { echo foo } ; echo done" do
-          let(:str){ "echo start ; (0..3).each { echo foo } ; echo done" }
+        describe "foo { echo foo }" do
           it { should eq [
+            t(:Command, "foo", lineno:0),
+            t(:BlockBegin, '{', lineno:0),
             t(:Command, "echo", lineno:0),
-            t(:Argument, "start", lineno:0),
-            t(:NumericalRangeWithBlock, (0..3), lineno:0),
-            t(:Command, "echo", lineno:0),
-            t(:Argument, "hi", lineno:0),
-            t(:Command, "echo", lineno:0),
-            t(:Argument, "done", lineno:0)
+            t(:Argument, "foo", lineno:0),
+            t(:BlockEnd, '}', lineno:0),
           ]}
         end
-        #
-        # describe "whitespace before/after the range doesn't matter" do
-        #   let(:str){ "    0..3     : echo hi" }
-        #   it { should eq [
-        #     t(:NumericalRange, (0..3), lineno:0),
-        #     t(:Command, "echo", lineno:0),
-        #     t(:Argument, "hi", lineno:0)
-        #   ]}
-        # end
+
+        describe "foo { |n| echo foo }" do
+          it { should eq [
+            t(:Command, "foo", lineno:0),
+            t(:BlockBegin, '{', lineno:0),
+            t(:BlockParam, "n", lineno:0),
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "foo", lineno:0),
+            t(:BlockEnd, '}', lineno:0),
+          ]}
+        end
+
+        describe "(0..3).each { echo foo }" do
+          it { should eq [
+            t(:Range, (0..3), lineno:0),
+            t(:Argument, '.each', lineno: 0),
+            t(:BlockBegin, '{', lineno:0),
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "foo", lineno:0),
+            t(:BlockEnd, '}', lineno:0),
+          ]}
+        end
+
+        describe "whitespace before/after the range doesn't matter" do
+          describe "     (0..3).each     {      echo foo   }     " do
+            it { should eq [
+              t(:Range, (0..3), lineno:0),
+              t(:Argument, '.each', lineno: 0),
+              t(:BlockBegin, '{', lineno:0),
+              t(:Command, "echo", lineno:0),
+              t(:Argument, "foo", lineno:0),
+              t(:BlockEnd, '}', lineno:0),
+            ]}
+          end
+        end
       end
     end
   end

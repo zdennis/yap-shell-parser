@@ -52,11 +52,14 @@ module Yap::Shell
     REDIRECTION            = /\A(([12]?>&?[12]?)\s*(?![12]>)(#{ARG})?)/
     REDIRECTION2           = /\A((&>|<)\s*(#{ARG}))/
 
-    NUMERICAL_RANGE           = /\A((\d+)\.\.(\d+))\s*:\s*/
-    NUMERICAL_RANGE_W_COUNTER = /\A((\d+)\.\.(\d+))\s+as\s+([A-z0-9]+)\s*:\s*/
-    NUMERIC_RANGE_W_BLOCK     = /\A\((\d+)\.\.(\d+)\)\.each\s*\{/
-    NUMERICAL_TIMES           = /\A((\d+)\.times)\s*:\s*/
-    NUMERICAL_TIMES_W_COUNTER = /\A((\d+)\.times)\s+as\s+([A-z0-9]+)\s*:\s*/
+    NUMERIC_RANGE              = /\A\(((\d+)\.\.(\d+))\)(?=\.)?/
+    NUMERIC_RANGE_W_CALL      = /\A\(((\d+)\.\.(\d+))\)(\.each)?\s*:\s*/
+    NUMERIC_RANGE_W_PARAM      = /\A(\((\d+)\.\.(\d+))\)\s+as\s+([A-z0-9]+)\s*:\s*/
+    NUMERIC_REPETITION         = /\A((\d+)(\.times))\s*:\s*/
+    NUMERIC_REPETITION_W_PARAM = /\A((\d+)(\.times))\s+as\s+([A-z0-9]+)\s*:\s*/
+
+    BLOCK_BEGIN = /\A\s*(\{)\s*(?:\|\s*([A-z0-9]+)\s*\|)?/
+    BLOCK_END = /\A\s*(\})\s*/
 
     # Loop over the given input and yield command substitutions. This yields
     # an object that responds to #str, and #position.
@@ -96,6 +99,7 @@ module Yap::Shell
       @tokens = []
       @lineno = 0
       @looking_for_args = false
+      @tokens_to_add_when_done = []
 
       max = 100
       count = 0
@@ -104,6 +108,7 @@ module Yap::Shell
 
       while process_next_chunk.call
         result =
+          block_token ||
           numerical_range_token ||
           command_substitution_token ||
           subgroup_token ||
@@ -124,6 +129,10 @@ module Yap::Shell
         @current_position += result.to_i
       end
 
+      @tokens_to_add_when_done.each do |args|
+        token *args
+      end
+
       @tokens
     end
 
@@ -133,29 +142,58 @@ module Yap::Shell
       @tokens.push [tag, Token.new(tag, value, lineno:@lineno, attrs:attrs)]
     end
 
+    def block_token
+      if md=@chunk.match(BLOCK_BEGIN)
+        @looking_for_args = false
+        token :BlockBegin, md[1]
+        token :BlockParam, md[2] if md[2]
+        md[0].length
+      elsif md=@chunk.match(BLOCK_END)
+        @looking_for_args = false
+        token :BlockEnd, md[1]
+        md[0].length
+      end
+    end
+
     def numerical_range_token
       return if @looking_for_args
-      if md=@chunk.match(NUMERICAL_RANGE)
+
+      if md=@chunk.match(NUMERIC_RANGE_W_CALL)
         start, stop = md[2].to_i, md[3].to_i
-        token :NumericalRange, (start..stop)
+        token :Range, (start..stop)
+        token :BlockBegin, '{'
+        @tokens_to_add_when_done << [:BlockEnd, '}']
         md[0].length
 
-      elsif md=@chunk.match(NUMERICAL_RANGE_W_COUNTER)
+      elsif md=@chunk.match(NUMERIC_RANGE_W_PARAM)
         start, stop = md[2].to_i, md[3].to_i
-        token :NumericalRange, (start..stop)
-        token :CounterVariable, md[4]
+        token :Range, (start..stop)
+        token :BlockBegin, '{'
+        token :BlockParam, md[4]
+        @tokens_to_add_when_done << [:BlockEnd, '}']
         md[0].length
 
-      elsif md=@chunk.match(NUMERICAL_TIMES)
-        start, stop = 0, md[2].to_i - 1
-        token :NumericalRange, (start..stop)
+      elsif md=@chunk.match(NUMERIC_REPETITION)
+        start, stop = 1, md[2].to_i
+        token :Range, (start..stop)
+        token :BlockBegin, '{'
+        @tokens_to_add_when_done << [:BlockEnd, '}']
         md[0].length
 
-      elsif md=@chunk.match(NUMERICAL_TIMES_W_COUNTER)
-        start, stop = 0, md[2].to_i - 1
-        token :NumericalRange, (start..stop)
-        token :CounterVariable, md[3]
+      elsif md=@chunk.match(NUMERIC_REPETITION_W_PARAM)
+        start, stop = 1, md[2].to_i
+        token :Range, (start..stop)
+        token :BlockBegin, '{'
+        token :BlockParam, md[4]
+        @tokens_to_add_when_done << [:BlockEnd, '}']
         md[0].length
+
+      elsif md=@chunk.match(NUMERIC_RANGE)
+        @looking_for_args = true
+        start, stop = md[2].to_i, md[3].to_i
+        token :Range, (start..stop)
+        md[0].length
+
       end
 
     end
