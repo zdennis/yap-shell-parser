@@ -3,7 +3,7 @@
 # convert Array-like string into Ruby's Array.
 
 class Yap::Shell::ParserImpl
-  token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe Redirection LValue RValue BeginCommandSubstitution EndCommandSubstitution
+  token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe Redirection LValue RValue BeginCommandSubstitution EndCommandSubstitution NumericalRange CounterVariable
   #
   # prechigh
   # #   left '**' '*' '/' '%'
@@ -19,6 +19,12 @@ class Yap::Shell::ParserImpl
 rule
 
 program : stmts
+  | repetition_stmt
+
+repetition_stmt: NumericalRange stmts
+    { result = NumericalRangeNode.new(val[0], val[1]) }
+  | NumericalRange CounterVariable stmts
+    { result = NumericalRangeNode.new(val[0], val[2], val[1]) }
 
 stmts : stmts Separator stmt
     { result = StatementsNode.new(val[0], val[2]) }
@@ -127,7 +133,7 @@ if $0 == __FILE__
     # "`git cbranch`",
     # "`git cbranch`.bak",
     # "echo `echo hi`",
-    "echo `echo hi` foo bar baz",
+    "0..3 as n: echo hi",
     # "`hi``bye` `what`",
     # "echo && `what` && where is `that`thing | `you know`",
     ].each do |src|

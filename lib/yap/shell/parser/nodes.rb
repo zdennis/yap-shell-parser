@@ -258,5 +258,30 @@ module Yap::Shell
       end
     end
 
+    class NumericalRangeNode
+      include Visitor
+
+      attr_accessor :head, :tail
+      attr_reader :range, :reference
+
+      def initialize(head, tail, reference=nil)
+        @head = head
+        @range = head.value
+        @tail = tail
+        @reference = reference
+      end
+
+      def to_s(indent:0)
+        if @counter_reference
+          "NumericalRangeNode(#{@range.to_s}, counter_variable: #{@reference}, tail: #{tail.inspect})"
+        else
+          "NumericalRangeNode(#{@range.to_s}, tail: #{tail.inspect})"
+        end
+      end
+
+      def inspect
+        to_s
+      end
+    end
   end
 end

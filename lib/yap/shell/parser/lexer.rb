@@ -52,6 +52,11 @@ module Yap::Shell
     REDIRECTION            = /\A(([12]?>&?[12]?)\s*(?![12]>)(#{ARG})?)/
     REDIRECTION2           = /\A((&>|<)\s*(#{ARG}))/
 
+    NUMERICAL_RANGE           = /\A((\d+)\.\.(\d+))\s*:\s*/
+    NUMERICAL_RANGE_W_COUNTER = /\A((\d+)\.\.(\d+))\s+as\s+([A-z0-9]+)\s*:\s*/
+    NUMERIC_RANGE_W_BLOCK     = /\A\((\d+)\.\.(\d+)\)\.each\s*\{/
+    NUMERICAL_TIMES           = /\A((\d+)\.times)\s*:\s*/
+    NUMERICAL_TIMES_W_COUNTER = /\A((\d+)\.times)\s+as\s+([A-z0-9]+)\s*:\s*/
 
     # Loop over the given input and yield command substitutions. This yields
     # an object that responds to #str, and #position.
@@ -99,6 +104,7 @@ module Yap::Shell
 
       while process_next_chunk.call
         result =
+          numerical_range_token ||
           command_substitution_token ||
           subgroup_token ||
           assignment_token ||
@@ -125,6 +131,33 @@ module Yap::Shell
 
     def token(tag, value, attrs:{})
       @tokens.push [tag, Token.new(tag, value, lineno:@lineno, attrs:attrs)]
+    end
+
+    def numerical_range_token
+      return if @looking_for_args
+      if md=@chunk.match(NUMERICAL_RANGE)
+        start, stop = md[2].to_i, md[3].to_i
+        token :NumericalRange, (start..stop)
+        md[0].length
+
+      elsif md=@chunk.match(NUMERICAL_RANGE_W_COUNTER)
+        start, stop = md[2].to_i, md[3].to_i
+        token :NumericalRange, (start..stop)
+        token :CounterVariable, md[4]
+        md[0].length
+
+      elsif md=@chunk.match(NUMERICAL_TIMES)
+        start, stop = 0, md[2].to_i - 1
+        token :NumericalRange, (start..stop)
+        md[0].length
+
+      elsif md=@chunk.match(NUMERICAL_TIMES_W_COUNTER)
+        start, stop = 0, md[2].to_i - 1
+        token :NumericalRange, (start..stop)
+        token :CounterVariable, md[3]
+        md[0].length
+      end
+
     end
 
     def command_token

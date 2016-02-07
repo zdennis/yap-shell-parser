@@ -8,6 +8,120 @@ describe Yap::Shell::Parser::Lexer do
     [tag, Yap::Shell::Parser::Lexer::Token.new(tag, val, lineno:lineno, attrs:attrs)]
   end
 
+  describe "looping constructs" do
+    describe "start of line" do
+      describe "numerical range (no reference variable)" do
+        describe "0..3: echo hi" do
+          let(:str){ "0..3: echo hi" }
+          it { should eq [
+            t(:NumericalRange, (0..3), lineno:0),
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "hi", lineno:0)
+          ]}
+        end
+
+        describe "whitespace before/after the range doesn't matter" do
+          let(:str){ "    0..3     : echo hi" }
+          it { should eq [
+            t(:NumericalRange, (0..3), lineno:0),
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "hi", lineno:0)
+          ]}
+        end
+      end
+
+      describe "numerical range $n (reference variable)" do
+        describe "0..3 as n: echo " do
+          let(:str){ "0..3 as n: echo $n" }
+          it { should eq [
+            t(:NumericalRange, (0..3), lineno:0),
+            t(:CounterVariable, "n", lineno:0),
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "$n", lineno:0)
+          ]}
+        end
+
+        describe "whitespace before/after the range/reference doesn't matter" do
+          let(:str){ "    0..3  as    n   : echo $n" }
+          it { should eq [
+            t(:NumericalRange, (0..3), lineno:0),
+            t(:CounterVariable, "n", lineno:0),
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "$n", lineno:0)
+          ]}
+        end
+      end
+
+      describe "<number>.times (no reference variable)" do
+        describe "3.times: echo hi" do
+          let(:str){ "3.times: echo hi" }
+          it { should eq [
+            t(:NumericalRange, (0..2), lineno:0),
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "hi", lineno:0)
+          ]}
+        end
+
+        describe "whitespace before/after the range doesn't matter" do
+          let(:str){ "    3.times    : echo hi" }
+          it { should eq [
+            t(:NumericalRange, (0..2), lineno:0),
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "hi", lineno:0)
+          ]}
+        end
+      end
+
+      describe "<number>.times $n (w/reference variable)" do
+        describe "3.times as n: echo hi" do
+          let(:str){ "3.times as n: echo hi" }
+          it { should eq [
+            t(:NumericalRange, (0..2), lineno:0),
+            t(:CounterVariable, "n", lineno:0),
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "hi", lineno:0)
+          ]}
+        end
+
+        describe "whitespace before/after the range/reference doesn't matter" do
+          let(:str){ "    3.times  as   n  : echo $n" }
+          it { should eq [
+            t(:NumericalRange, (0..2), lineno:0),
+            t(:CounterVariable, "n", lineno:0),
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "$n", lineno:0)
+          ]}
+        end
+      end
+    end
+
+    describe "statement mixed with other statements" do
+      describe "numerical range (no reference variable)" do
+        describe "echo start ; (0..3).each { echo foo } ; echo done" do
+          let(:str){ "echo start ; (0..3).each { echo foo } ; echo done" }
+          it { should eq [
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "start", lineno:0),
+            t(:NumericalRangeWithBlock, (0..3), lineno:0),
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "hi", lineno:0),
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "done", lineno:0)
+          ]}
+        end
+        #
+        # describe "whitespace before/after the range doesn't matter" do
+        #   let(:str){ "    0..3     : echo hi" }
+        #   it { should eq [
+        #     t(:NumericalRange, (0..3), lineno:0),
+        #     t(:Command, "echo", lineno:0),
+        #     t(:Argument, "hi", lineno:0)
+        #   ]}
+        # end
+      end
+    end
+  end
+
   describe "empty string" do
     let(:str){ "" }
     it { should eq [] }
