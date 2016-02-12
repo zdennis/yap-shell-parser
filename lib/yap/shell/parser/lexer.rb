@@ -54,13 +54,15 @@ module Yap::Shell
 
     NUMERIC_RANGE              = /\A\(((\d+)\.\.(\d+))\)(\.each)?/
     NUMERIC_RANGE_W_CALL      = /\A\(((\d+)\.\.(\d+))\)(\.each)?\s*:\s*/
-    NUMERIC_RANGE_W_PARAM      = /\A(\((\d+)\.\.(\d+))\)\s+as\s+([A-z0-9]+)\s*:\s*/
+    NUMERIC_RANGE_W_PARAM      = /\A(\((\d+)\.\.(\d+))\)\s+as\s+([A-z0-9,\s]+)\s*:\s*/
     NUMERIC_REPETITION         = /\A((\d+)(\.times))\s*/
     NUMERIC_REPETITION_2       = /\A((\d+)(\.times))\s*:\s*/
-    NUMERIC_REPETITION_W_PARAM = /\A((\d+)(\.times))\s+as\s+([A-z0-9]+)\s*:\s*/
+    NUMERIC_REPETITION_W_PARAM = /\A((\d+)(\.times))\s+as\s+([A-z0-9,\s]+)\s*:\s*/
 
-    BLOCK_BEGIN = /\A\s*(\{)\s*(?:\|\s*([A-z0-9]+)\s*\|)?/
+    BLOCK_BEGIN = /\A\s*(\{)\s*(?:\|\s*([A-z0-9,\s]+)\s*\|)?/
     BLOCK_END = /\A\s*(\})\s*/
+
+    SPLIT_BLOCK_PARAMS_RGX = /\s*,\s*|\s*/
 
     # Loop over the given input and yield command substitutions. This yields
     # an object that responds to #str, and #position.
@@ -147,7 +149,10 @@ module Yap::Shell
       if md=@chunk.match(BLOCK_BEGIN)
         @looking_for_args = false
         token :BlockBegin, md[1]
-        token :BlockParam, md[2] if md[2]
+        if md[2]
+          params = md[2].split(SPLIT_BLOCK_PARAMS_RGX)
+          token :BlockParams, params
+        end
         md[0].length
       elsif md=@chunk.match(BLOCK_END)
         @looking_for_args = false
@@ -170,7 +175,8 @@ module Yap::Shell
         start, stop = md[2].to_i, md[3].to_i
         token :Range, (start..stop)
         token :BlockBegin, '{'
-        token :BlockParam, md[4]
+        params = md[4].split(SPLIT_BLOCK_PARAMS_RGX)
+        token :BlockParams, params
         @tokens_to_add_when_done << [:BlockEnd, '}']
         md[0].length
 
@@ -185,7 +191,8 @@ module Yap::Shell
         start, stop = 1, md[2].to_i
         token :Range, (start..stop)
         token :BlockBegin, '{'
-        token :BlockParam, md[4]
+        params = md[4].split(SPLIT_BLOCK_PARAMS_RGX)
+        token :BlockParams, params
         @tokens_to_add_when_done << [:BlockEnd, '}']
         md[0].length
 
@@ -308,7 +315,7 @@ module Yap::Shell
             result = process_string @chunk[characters_read..-1], ch
             str << result.str
             characters_read += result.consumed_length
-          elsif prev_char != '\\' && ch =~ /[\s\|;&\)]/
+          elsif prev_char != '\\' && ch =~ /[\s\|;&\)\}]/
             break
           else
             str << ch

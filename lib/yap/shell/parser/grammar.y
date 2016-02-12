@@ -3,7 +3,7 @@
 # convert Array-like string into Ruby's Array.
 
 class Yap::Shell::ParserImpl
-  token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe Redirection LValue RValue BeginCommandSubstitution EndCommandSubstitution Range BlockBegin BlockEnd BlockParam
+  token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe Redirection LValue RValue BeginCommandSubstitution EndCommandSubstitution Range BlockBegin BlockEnd BlockParams
   #
   # prechigh
   # #   left '**' '*' '/' '%'
@@ -24,10 +24,24 @@ stmts : stmts Separator stmt
     { result = StatementsNode.new(val[0], val[2]) }
   | stmt
     { result = StatementsNode.new(val[0]) }
+  | range_stmt
 
 stmt : stmt Conditional pipeline
     { result = ConditionalNode.new(val[1].value, val[0], val[2]) }
   | pipeline
+  | block_stmt
+
+block_stmt : range_stmt BlockBegin stmts BlockEnd
+    { result = val[0].tap { |range_node| range_node.tail = BlockNode.new(nil, val[2]) } }
+  | range_stmt BlockBegin BlockParams stmts BlockEnd
+    { result = val[0].tap { |range_node| range_node.tail = BlockNode.new(nil, val[3], params: val[2].value) } }
+  | stmt BlockBegin stmts BlockEnd
+    { result = BlockNode.new(val[0], val[2]) }
+  | stmt BlockBegin BlockParams stmts BlockEnd
+    { result = BlockNode.new(val[0], val[3], params: val[2].value) }
+
+range_stmt : Range
+    { result = RangeNode.new(val[0]) }
 
 pipeline : pipeline Pipe stmts2
     { result = PipelineNode.new(val[0], val[2]) }
@@ -40,12 +54,6 @@ stmts2 : '(' stmts ')'
   | stmt_w_substitutions
   | command_w_heredoc
   | internal_eval
-  | range_stmt
-
-range_stmt : Range BlockBegin stmts BlockEnd
-    { result = RangeNode.new(val[0], BlockNode.new(val[2]))}
-  | Range BlockBegin BlockParam stmts BlockEnd
-    { result = RangeNode.new(val[0], BlockNode.new(val[3], params: [val[2].value]))}
 
 stmt_w_substitutions : stmt_w_substitutions2 args
     { result = val[0] ; val[0].tail = val[1] }
@@ -111,6 +119,7 @@ end
     @yydebug = true
 
     @q = Yap::Shell::Parser::Lexer.new.tokenize(str)
+    pp @q if ENV["DEBUG"]
     # @q.push [false, '$']   # is optional from Racc 1.3.7
 # puts @q.inspect
 # puts "---- parse tree follows ----"
@@ -134,7 +143,8 @@ if $0 == __FILE__
     # "`git cbranch`",
     # "`git cbranch`.bak",
     # "echo `echo hi`",
-    "(0..3) : echo hi",
+    # "ls *.rb te* { |f| f }",
+    # "f { |a, b, c| echo foo }"
     "(0..3) as n : echo hi",
     # "`hi``bye` `what`",
     # "echo && `what` && where is `that`thing | `you know`",

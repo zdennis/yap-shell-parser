@@ -9,7 +9,101 @@ describe Yap::Shell::Parser::Lexer do
     [tag, Yap::Shell::Parser::Lexer::Token.new(tag, val, lineno:lineno, attrs:attrs)]
   end
 
+  describe "block expressions" do
+    describe "can follow any command" do
+      describe "ls { this_is_a_block }" do
+        it { should eq [
+          t(:Command, "ls", lineno:0),
+          t(:BlockBegin, '{', lineno: 0),
+          t(:Command, "this_is_a_block", lineno:0),
+          t(:BlockEnd, '}', lineno: 0)
+        ]}
+      end
+
+      describe "whitespace before/after the range doesn't matter" do
+        describe "   ls        {     this_is_a_block    }   " do
+          it { should eq [
+            t(:Command, "ls", lineno:0),
+            t(:BlockBegin, '{', lineno: 0),
+            t(:Command, "this_is_a_block", lineno:0),
+            t(:BlockEnd, '}', lineno: 0)
+          ]}
+        end
+
+        describe "ls {echo n}" do
+          it { should eq [
+            t(:Command, "ls", lineno:0),
+            t(:BlockBegin, '{', lineno: 0),
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "n", lineno:0),
+            t(:BlockEnd, '}', lineno: 0)
+          ]}
+        end
+      end
+    end
+
+    describe "can take block params" do
+      describe "ls { |a| this_is_a_block }" do
+        it { should eq [
+          t(:Command, "ls", lineno:0),
+          t(:BlockBegin, '{', lineno: 0),
+          t(:BlockParams, ['a'], lineno: 0),
+          t(:Command, "this_is_a_block", lineno:0),
+          t(:BlockEnd, '}', lineno: 0)
+        ]}
+      end
+
+      describe "ls { |a,b| this_is_a_block }" do
+        it { should eq [
+          t(:Command, "ls", lineno:0),
+          t(:BlockBegin, '{', lineno: 0),
+          t(:BlockParams, ['a', 'b'], lineno: 0),
+          t(:Command, "this_is_a_block", lineno:0),
+          t(:BlockEnd, '}', lineno: 0)
+        ]}
+      end
+
+      describe "ls { |a,  b,  c| this_is_a_block }" do
+        it { should eq [
+          t(:Command, "ls", lineno:0),
+          t(:BlockBegin, '{', lineno: 0),
+          t(:BlockParams, ['a', 'b', 'c'], lineno: 0),
+          t(:Command, "this_is_a_block", lineno:0),
+          t(:BlockEnd, '}', lineno: 0)
+        ]}
+      end
+    end
+
+    describe "can contain multiple statements" do
+      describe "ls { |a| ls ; ls2 || ls3 && ls4 ; ls5 }" do
+        it { should eq [
+          t(:Command, "ls", lineno:0),
+          t(:BlockBegin, '{', lineno: 0),
+          t(:BlockParams, ['a'], lineno: 0),
+          t(:Command, 'ls', lineno: 0),
+          t(:Separator, ';', lineno: 0),
+          t(:Command, 'ls2', lineno: 0),
+          t(:Conditional, '||', lineno: 0),
+          t(:Command, 'ls3', lineno: 0),
+          t(:Conditional, '&&', lineno: 0),
+          t(:Command, 'ls4', lineno: 0),
+          t(:Separator, ';', lineno: 0),
+          t(:Command, 'ls5', lineno: 0),
+          t(:BlockEnd, '}', lineno: 0)
+        ]}
+      end
+    end
+  end
+
   describe "looping constructs" do
+    describe "standalone" do
+      describe "(1..100)" do
+        it { should eq [
+          t(:Range, (1..100), lineno:0),
+        ]}
+      end
+    end
+
     describe "start of line" do
       describe "numerical range (no reference variable)" do
         describe "(0..3): echo hi" do
@@ -40,7 +134,7 @@ describe Yap::Shell::Parser::Lexer do
           it { should eq [
             t(:Range, (0..3), lineno:0),
             t(:BlockBegin, '{', lineno: 0),
-            t(:BlockParam, 'n', lineno: 0),
+            t(:BlockParams, ['n'], lineno: 0),
             t(:Command, "echo", lineno:0),
             t(:Argument, "$n", lineno:0),
             t(:BlockEnd, '}', lineno:0)
@@ -52,7 +146,7 @@ describe Yap::Shell::Parser::Lexer do
             it { should eq [
               t(:Range, (0..3), lineno:0),
               t(:BlockBegin, '{', lineno: 0),
-              t(:BlockParam, 'n', lineno: 0),
+              t(:BlockParams, ['n'], lineno: 0),
               t(:Command, "echo", lineno:0),
               t(:Argument, "$n", lineno:0),
               t(:BlockEnd, '}', lineno:0)
@@ -66,7 +160,18 @@ describe Yap::Shell::Parser::Lexer do
           it { should eq [
             t(:Range, (1..3), lineno:0),
             t(:BlockBegin, '{', lineno: 0),
-            t(:BlockParam, 'n', lineno: 0),
+            t(:BlockParams, ['n'], lineno: 0),
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "hi", lineno:0),
+            t(:BlockEnd, '}', lineno:0)
+          ]}
+        end
+
+        describe "3.times { |a, b,c| echo hi }" do
+          it { should eq [
+            t(:Range, (1..3), lineno:0),
+            t(:BlockBegin, '{', lineno: 0),
+            t(:BlockParams, ['a', 'b', 'c'], lineno: 0),
             t(:Command, "echo", lineno:0),
             t(:Argument, "hi", lineno:0),
             t(:BlockEnd, '}', lineno:0)
@@ -103,7 +208,7 @@ describe Yap::Shell::Parser::Lexer do
           it { should eq [
             t(:Range, (1..3), lineno:0),
             t(:BlockBegin, '{', lineno: 0),
-            t(:BlockParam, 'n', lineno: 0),
+            t(:BlockParams, ['n'], lineno: 0),
             t(:Command, "echo", lineno:0),
             t(:Argument, "$n", lineno:0),
             t(:BlockEnd, '}', lineno:0)
@@ -115,7 +220,7 @@ describe Yap::Shell::Parser::Lexer do
             it { should eq [
               t(:Range, (1..3), lineno:0),
               t(:BlockBegin, '{', lineno: 0),
-              t(:BlockParam, 'n', lineno: 0),
+              t(:BlockParams, ['n'], lineno: 0),
               t(:Command, "echo", lineno:0),
               t(:Argument, "$n", lineno:0),
               t(:BlockEnd, '}', lineno:0)
@@ -141,7 +246,7 @@ describe Yap::Shell::Parser::Lexer do
           it { should eq [
             t(:Command, "foo", lineno:0),
             t(:BlockBegin, '{', lineno:0),
-            t(:BlockParam, "n", lineno:0),
+            t(:BlockParams, ['n'], lineno:0),
             t(:Command, "echo", lineno:0),
             t(:Argument, "foo", lineno:0),
             t(:BlockEnd, '}', lineno:0),
@@ -1170,7 +1275,5 @@ describe Yap::Shell::Parser::Lexer do
         )
       end
     end
-
   end
-
 end

@@ -91,3 +91,28 @@ RSpec.configure do |config|
   Kernel.srand config.seed
 =end
 end
+
+
+RSpec::Matchers.define :parse do |expected|
+  match do |parser|
+    begin
+      results = parser.parse(expected)
+      pp results if ENV["DEBUG"]
+    rescue Yap::Shell::Parser::ParseError => ex
+      raise ex
+    end
+    true
+  end
+end
+
+RSpec::Matchers.define :fail_parsing do |expected|
+  match do |parser|
+    begin
+      results = parser.parse(expected)
+      pp results if ENV["DEBUG"]
+    rescue Yap::Shell::Parser::ParseError => ex
+      return true
+    end
+    false
+  end
+end

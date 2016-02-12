@@ -263,17 +263,17 @@ module Yap::Shell
 
       attr_accessor :head, :tail, :params
 
-      def initialize(head, params: [])
+      def initialize(head, tail, params: [])
         @head = head
-        @tail = nil
+        @tail = tail
         @params = params
       end
 
       def to_s(indent:0)
         if @counter_reference
-          "BlockNode(#{@head.inspect}, params: #{@params.inspect})"
+          "BlockNode(#{@head.inspect}, tail: #{@tail.inspect} params: #{@params.inspect})"
         else
-          "BlockNode(#{@head.inspect}, params: #{@params.inspect})"
+          "BlockNode(#{@head.inspect}, tail: #{@tail.inspect} params: #{@params.inspect})"
         end
       end
 
@@ -286,19 +286,14 @@ module Yap::Shell
       include Visitor
 
       attr_accessor :head, :tail
-      attr_reader :range
 
-      def initialize(head, tail)
+      def initialize(head, tail=nil)
         @head = head
         @tail = tail
       end
 
       def to_s(indent:0)
-        if @counter_reference
-          "Range(#{@head.inspect}, tail: #{tail.inspect})"
-        else
-          "Range(#{@head.inspect}, tail: #{tail.inspect})"
-        end
+        "(#{@head.inspect}, tail: #{tail.inspect})"
       end
 
       def inspect
