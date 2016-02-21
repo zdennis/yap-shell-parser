@@ -55,12 +55,12 @@ module Yap::Shell
     NUMERIC_RANGE              = /\A\(((\d+)\.\.(\d+))\)(\.each)?/
     NUMERIC_RANGE_W_CALL      = /\A\(((\d+)\.\.(\d+))\)(\.each)?\s*:\s*/
     NUMERIC_RANGE_W_PARAM      = /\A(\((\d+)\.\.(\d+))\)\s+as\s+([A-z0-9,\s]+)\s*:\s*/
-    NUMERIC_REPETITION         = /\A((\d+)(\.times))\s*/
+    NUMERIC_REPETITION         = /\A((\d+)(\.times))/
     NUMERIC_REPETITION_2       = /\A((\d+)(\.times))\s*:\s*/
     NUMERIC_REPETITION_W_PARAM = /\A((\d+)(\.times))\s+as\s+([A-z0-9,\s]+)\s*:\s*/
 
-    BLOCK_BEGIN = /\A\s*(\{)\s*(?:\|\s*([A-z0-9,\s]+)\s*\|)?/
-    BLOCK_END = /\A\s*(\})\s*/
+    BLOCK_BEGIN = /\A\s+(\{)\s*(?:\|\s*([A-z0-9,\s]+)\s*\|)?/
+    BLOCK_END = /\A\s+(\})\s*/
 
     SPLIT_BLOCK_PARAMS_RGX = /\s*,\s*|\s*/
 

@@ -52,7 +52,7 @@ describe Yap::Shell::Parser do
   it { is_expected.to parse "(0..3)" }
   it { is_expected.to parse "(0..3): echo hi" }
   it { is_expected.to parse "(0..3) as n: echo hi $n" }
-  it { is_expected.to parse "echo hi ; (0..3) {echo hi $n}" }
+  it { is_expected.to parse "echo hi ; (0..3) {echo hi $n }" }
   it { is_expected.to parse "echo hi ; (0..3) { echo hi $n } ; echo bye" }
   it { is_expected.to parse "ls *.rb { |f,g,h| echo $f && echo $h && echo $i }" }
 

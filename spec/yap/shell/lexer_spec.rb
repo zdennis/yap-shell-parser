@@ -20,7 +20,7 @@ describe Yap::Shell::Parser::Lexer do
         ]}
       end
 
-      describe "whitespace before/after the range doesn't matter" do
+      describe "whitespace is required before the start of the block, but not after" do
         describe "   ls        {     this_is_a_block    }   " do
           it { should eq [
             t(:Command, "ls", lineno:0),
@@ -30,7 +30,7 @@ describe Yap::Shell::Parser::Lexer do
           ]}
         end
 
-        describe "ls {echo n}" do
+        describe "ls { echo n }" do
           it { should eq [
             t(:Command, "ls", lineno:0),
             t(:BlockBegin, '{', lineno: 0),
@@ -38,6 +38,22 @@ describe Yap::Shell::Parser::Lexer do
             t(:Argument, "n", lineno:0),
             t(:BlockEnd, '}', lineno: 0)
           ]}
+        end
+
+        describe "ls {echo n }" do
+          it { should eq [
+            t(:Command, "ls", lineno:0),
+            t(:BlockBegin, '{', lineno: 0),
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "n", lineno:0),
+            t(:BlockEnd, '}', lineno: 0)
+          ]}
+        end
+
+        describe "ls s{ echo n}" do
+          it "fails to lex" do
+            expect { subject }.to raise_error
+          end
         end
       end
     end
