@@ -6,6 +6,14 @@ module Yap::Shell
       end
     end
 
+    module NoOpNode
+      extend Visitor
+
+      def self.accept(*args)
+        # no-op
+      end
+    end
+
     class ArgumentNode
       include Visitor
 

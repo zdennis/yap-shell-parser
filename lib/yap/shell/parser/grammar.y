@@ -3,7 +3,7 @@
 # convert Array-like string into Ruby's Array.
 
 class Yap::Shell::ParserImpl
-  token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe Redirection LValue RValue BeginCommandSubstitution EndCommandSubstitution Range BlockBegin BlockEnd BlockParams
+  token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe Redirection LValue RValue BeginCommandSubstitution EndCommandSubstitution Range BlockBegin BlockEnd BlockParams BlankLine
   #
   # prechigh
   # #   left '**' '*' '/' '%'
@@ -19,6 +19,8 @@ class Yap::Shell::ParserImpl
 rule
 
 program : stmts
+  | BlankLine
+    { result = NoOpNode }
 
 stmts : stmts Separator stmt
     { result = StatementsNode.new(val[0], val[2]) }

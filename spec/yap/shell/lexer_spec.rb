@@ -9,6 +9,20 @@ describe Yap::Shell::Parser::Lexer do
     [tag, Yap::Shell::Parser::Lexer::Token.new(tag, val, lineno:lineno, attrs:attrs)]
   end
 
+  describe "blank lines" do
+    describe "" do
+      it { should eq [
+        t(:BlankLine, "", lineno:0)
+      ]}
+    end
+
+    describe "     " do
+      it { should eq [
+        t(:BlankLine, "     ", lineno:0)
+      ]}
+    end
+  end
+
   describe "block expressions" do
     describe "can follow any command" do
       describe "ls { this_is_a_block }" do
@@ -292,11 +306,6 @@ describe Yap::Shell::Parser::Lexer do
         end
       end
     end
-  end
-
-  describe "empty string" do
-    let(:str){ "" }
-    it { should eq [] }
   end
 
   describe "string with newlines" do

@@ -14,6 +14,8 @@ describe Yap::Shell::Parser do
     end
   end
 
+  it { is_expected.to parse "" }
+  it { is_expected.to parse " " }
   it { is_expected.to parse "ls" }
   it { is_expected.to parse "echo foo" }
   it { is_expected.to parse "echo foo ; echo bar baz yep" }

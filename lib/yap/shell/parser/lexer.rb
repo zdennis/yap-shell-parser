@@ -136,6 +136,8 @@ module Yap::Shell
         token *args
       end
 
+      token :BlankLine, str if @tokens.empty?
+
       @tokens
     end
 
