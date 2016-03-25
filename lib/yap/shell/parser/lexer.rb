@@ -37,7 +37,7 @@ module Yap::Shell
     end
 
     COMMAND_SUBSTITUTION   = /\A(`|\$\()/
-    ARG                    = /[^\s;\|\(\)\{\}\[\]\&\!\\\<`][^\s;\|\(\)\{\}\[\]\&\>\<`]*/
+    ARG                    = /[^\s;\|\(\)\{\}\[\]\&\!\\\<\>`][^\s;\|\(\)\{\}\[\]\&\>\<`]*/
     COMMAND                = /\A(#{ARG})/
     LITERAL_COMMAND        = /\A\\(#{ARG})/
     WHITESPACE             = /\A\s+/
@@ -107,6 +107,7 @@ module Yap::Shell
       max = 100
       count = 0
       @current_position = 0
+      last_position = -1
       process_next_chunk = -> { @chunk = str.slice(@current_position..-1) ; @chunk != "" }
 
       while process_next_chunk.call
@@ -127,8 +128,10 @@ module Yap::Shell
           internal_eval_token
 
         count += 1
-        raise "Infinite loop detected on #{@chunk.inspect}" if count == max
+        # raise "Infinite loop detected on #{@chunk.inspect}" if count == max
+        raise "Infinite loop detected in #{str.inspect}\non chunk:\n  #{@chunk.inspect}" if @current_position == last_position
 
+        last_position = @current_position
         @current_position += result.to_i
       end
 

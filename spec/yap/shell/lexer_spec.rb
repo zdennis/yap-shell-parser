@@ -903,6 +903,20 @@ describe Yap::Shell::Parser::Lexer do
           t(:Redirection, ">", lineno: 0, attrs: { target: "a.txt" }),
         ]}
       end
+
+      describe "can be the start of a command (for clearing files)" do
+        describe "> a.txt" do
+          it { should eq [
+            t(:Redirection, ">", lineno: 0, attrs: { target: "a.txt" })
+          ]}
+        end
+
+        describe ">foo.txt" do
+          it { should eq [
+            t(:Redirection, ">", lineno: 0, attrs: { target: "foo.txt" })
+          ]}
+        end
+      end
     end
 
     describe "stderr" do

@@ -67,6 +67,8 @@ stmt_w_substitutions2 : BeginCommandSubstitution stmts EndCommandSubstitution
 command_w_heredoc : command_w_redirects Heredoc
     { val[0].heredoc = val[1] ; result = val[0] }
   | command_w_redirects
+  | Redirection
+    { result = RedirectionNode.new(val[0].value, val[0].attrs[:target]) }
 
 command_w_redirects : command_w_redirects Redirection
     { val[0].redirects << RedirectionNode.new(val[1].value, val[1].attrs[:target]) ; result = val[0] }
