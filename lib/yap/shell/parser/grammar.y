@@ -3,7 +3,7 @@
 # convert Array-like string into Ruby's Array.
 
 class Yap::Shell::ParserImpl
-  token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe Redirection LValue RValue BeginCommandSubstitution EndCommandSubstitution Range BlockBegin BlockEnd BlockParams BlankLine
+  token Command LiteralCommand Argument Heredoc InternalEval Separator Conditional Pipe Redirection LValue RValue BeginCommandSubstitution EndCommandSubstitution Range BlockBegin BlockEnd BlockParams BlankLine Comment
   #
   # prechigh
   # #   left '**' '*' '/' '%'
@@ -48,6 +48,12 @@ range_stmt : Range
 pipeline : pipeline Pipe stmts2
     { result = PipelineNode.new(val[0], val[2]) }
   | stmts2
+  | stmts2_w_comment
+
+stmts2_w_comment : stmts2 Comment
+    { result = StatementsNode.new(val[0], CommentNode.new(val[1])) }
+  | Comment
+    { result = CommentNode.new(val[0]) }
 
 stmts2 : '(' stmts ')'
     { result = val[1] }

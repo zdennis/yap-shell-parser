@@ -59,6 +59,8 @@ describe Yap::Shell::Parser do
   it { is_expected.to parse "ls *.rb { |f,g,h| echo $f && echo $h && echo $i }" }
   it { is_expected.to parse ">foo.txt" }
   it { is_expected.to parse "echo bar && > foo.txt" }
+  it { is_expected.to parse "#this is a comment" }
+  it { is_expected.to parse "echo foo #this last part is a comment" }
 
   it { is_expected.to fail_parsing "ls ()" }
 end

@@ -85,6 +85,24 @@ module Yap::Shell
       end
     end
 
+    class CommentNode
+      include Visitor
+
+      attr_reader :text
+
+      def initialize(text)
+        @text = text
+      end
+
+      def inspect
+        to_s
+      end
+
+      def to_s
+        "CommentNode(#{@text})"
+      end
+    end
+
     class EnvNode
       include Visitor
 

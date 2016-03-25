@@ -23,6 +23,23 @@ describe Yap::Shell::Parser::Lexer do
     end
   end
 
+  describe "comments" do
+    describe "hash symbol and everything there-after is a comment" do
+      describe "#this is a comment" do
+        it { should eq [
+          t(:Comment, "#this is a comment", lineno:0)
+        ]}
+      end
+
+      describe "ls #this last part is a comment" do
+        it { should eq [
+          t(:Command, "ls", lineno:0),
+          t(:Comment, "#this last part is a comment", lineno:0)
+        ]}
+      end
+    end
+  end
+
   describe "block expressions" do
     describe "can follow any command" do
       describe "ls { this_is_a_block }" do
@@ -429,11 +446,11 @@ describe Yap::Shell::Parser::Lexer do
       ]}
     end
 
-    describe "commands with a escaped args: ls some\ dir" do
+    describe "commands with escaped spaces: ls some\ dir" do
       let(:str){ 'ls some\ dir' }
       it { should eq [
         t(:Command, "ls", lineno:0),
-        t(:Argument, 'some\ dir', lineno:0)
+        t(:Argument, 'some dir', lineno:0)
       ]}
     end
 

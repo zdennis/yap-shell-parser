@@ -40,6 +40,7 @@ module Yap::Shell
     ARG                    = /[^\s;\|\(\)\{\}\[\]\&\!\\\<\>`][^\s;\|\(\)\{\}\[\]\&\>\<`]*/
     COMMAND                = /\A(#{ARG})/
     LITERAL_COMMAND        = /\A\\(#{ARG})/
+    COMMENT                = /\A#[^$]+/
     WHITESPACE             = /\A\s+/
     LH_ASSIGNMENT          = /\A(([A-z_][\w]*)=)/
     RH_VALUE               = /\A(\S+)/
@@ -112,6 +113,7 @@ module Yap::Shell
 
       while process_next_chunk.call
         result =
+          comment_token ||
           block_token ||
           numerical_range_token ||
           command_substitution_token ||
@@ -162,6 +164,13 @@ module Yap::Shell
       elsif md=@chunk.match(BLOCK_END)
         @looking_for_args = false
         token :BlockEnd, md[1]
+        md[0].length
+      end
+    end
+
+    def comment_token
+      if md=@chunk.match(COMMENT)
+        token :Comment, md[0]
         md[0].length
       end
     end
@@ -316,10 +325,14 @@ module Yap::Shell
         prev_char = ''
         loop do
           ch = @chunk[characters_read]
+          # binding.pry
           if %w(' ").include?(ch)
             result = process_string @chunk[characters_read..-1], ch
             str << result.str
             characters_read += result.consumed_length
+          elsif ch == '\\'
+            # no-op
+            characters_read += 1
           elsif prev_char != '\\' && ch =~ /[\s\|;&\)\}]/
             break
           else
