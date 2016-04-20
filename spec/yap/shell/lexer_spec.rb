@@ -1332,4 +1332,26 @@ describe Yap::Shell::Parser::Lexer do
       end
     end
   end
+
+  describe 'strings' do
+    describe 'non-terminated strings' do
+      it 'raises an error on non-terminated double quotes' do
+        expect do
+          described_class.new.tokenize('"nonterminated')
+        end.to raise_error(
+          Yap::Shell::Parser::Lexer::NonterminatedString,
+          %|Expected to find " in:\n  "nonterminated|
+        )
+      end
+
+      it 'raises an error on non-terminated single quotes' do
+        expect do
+          described_class.new.tokenize("'nonterminated")
+        end.to raise_error(
+          Yap::Shell::Parser::Lexer::NonterminatedString,
+          %|Expected to find ' in:\n  'nonterminated|
+        )
+      end
+    end
+  end
 end

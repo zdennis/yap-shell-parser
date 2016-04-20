@@ -4,6 +4,7 @@ module Yap::Shell
   class Parser::Lexer
     class Error < ::StandardError ; end
     class HeredocMissingEndDelimiter < Error ; end
+    class NonterminatedString < Error ; end
 
     class Token
       include Comparable
@@ -120,12 +121,12 @@ module Yap::Shell
           subgroup_token ||
           assignment_token ||
           literal_command_token ||
+          string_token ||
           command_token ||
           whitespace_token ||
           terminator_token ||
           redirection_token ||
           heredoc_token ||
-          string_argument_token ||
           argument_token ||
           internal_eval_token
 
@@ -390,10 +391,14 @@ module Yap::Shell
     end
 
     # Matches single and double quoted strings
-    def string_argument_token
+    def string_token
       if %w(' ").include?(@chunk[0])
         result = process_string @chunk[0..-1], @chunk[0]
-        token :Argument, result.str
+        if @looking_for_args
+          token :Argument, result.str
+        else
+          token :Command, result.str
+        end
         return result.consumed_length
       end
     end
@@ -490,6 +495,7 @@ module Yap::Shell
 
         if i >= input_str.length
           puts "#{' '*indent}C-yah: result:#{result_str.inspect}  length: #{input_str.length}"  if ENV["DEBUG"]
+          raise NonterminatedString, "Expected to find #{delimiter} in:\n  #{input_str}"
           return OpenStruct.new(str:result_str, consumed_length: input_str.length)
         end
 
