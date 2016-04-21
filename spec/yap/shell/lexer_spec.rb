@@ -1354,4 +1354,38 @@ describe Yap::Shell::Parser::Lexer do
       end
     end
   end
+
+  describe 'line continutations' do
+    describe 'backward slashes' do
+      it 'raises an error when found at the end of the single line string' do
+        expect do
+          described_class.new.tokenize('echo hello \\')
+        end.to raise_error(
+          Yap::Shell::Parser::Lexer::LineContinuationFound,
+          %|Expected more input, line continutation found|
+        )
+      end
+
+      it 'raises an error when found at the end of a multiline string' do
+        expect do
+          described_class.new.tokenize("echo hello \n world\\")
+        end.to raise_error(
+          Yap::Shell::Parser::Lexer::LineContinuationFound,
+          %|Expected more input, line continutation found|
+        )
+      end
+
+      it 'does not raise when found before the end of a single line string' do
+        expect do
+          described_class.new.tokenize("echo hello \\ world")
+        end.to_not raise_error
+      end
+
+      it 'does not raise when found before the end of a multiline string' do
+        expect do
+          described_class.new.tokenize("echo hello \n world\\ word")
+        end.to_not raise_error
+      end
+    end
+  end
 end

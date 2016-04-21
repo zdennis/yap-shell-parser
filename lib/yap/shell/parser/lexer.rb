@@ -4,6 +4,7 @@ module Yap::Shell
   class Parser::Lexer
     class Error < ::StandardError ; end
     class HeredocMissingEndDelimiter < Error ; end
+    class LineContinuationFound < Error ; end
     class NonterminatedString < Error ; end
 
     class Token
@@ -55,7 +56,7 @@ module Yap::Shell
     REDIRECTION2           = /\A((&>|<)\s*(#{ARG}))/
 
     NUMERIC_RANGE              = /\A\(((\d+)\.\.(\d+))\)(\.each)?/
-    NUMERIC_RANGE_W_CALL      = /\A\(((\d+)\.\.(\d+))\)(\.each)?\s*:\s*/
+    NUMERIC_RANGE_W_CALL       = /\A\(((\d+)\.\.(\d+))\)(\.each)?\s*:\s*/
     NUMERIC_RANGE_W_PARAM      = /\A(\((\d+)\.\.(\d+))\)\s+as\s+([A-z0-9,\s]+)\s*:\s*/
     NUMERIC_REPETITION         = /\A((\d+)(\.times))/
     NUMERIC_REPETITION_2       = /\A((\d+)(\.times))\s*:\s*/
@@ -63,6 +64,8 @@ module Yap::Shell
 
     BLOCK_BEGIN = /\A\s+(\{)\s*(?:\|\s*([A-z0-9,\s]+)\s*\|)?/
     BLOCK_END = /\A\s+(\})\s*/
+
+    LINE_CONTINUATION = /.*\\\Z/
 
     SPLIT_BLOCK_PARAMS_RGX = /\s*,\s*|\s*/
 
@@ -100,7 +103,7 @@ module Yap::Shell
     end
 
     def tokenize(str)
-      @str = str
+      @chunk = str
       @tokens = []
       @lineno = 0
       @looking_for_args = false
@@ -111,6 +114,8 @@ module Yap::Shell
       @current_position = 0
       last_position = -1
       process_next_chunk = -> { @chunk = str.slice(@current_position..-1) ; @chunk != "" }
+
+      line_continuation_token
 
       while process_next_chunk.call
         result =
@@ -326,7 +331,7 @@ module Yap::Shell
         prev_char = ''
         loop do
           ch = @chunk[characters_read]
-          # binding.pry
+
           if %w(' ").include?(ch)
             result = process_string @chunk[characters_read..-1], ch
             str << result.str
@@ -371,6 +376,15 @@ module Yap::Shell
           consumed_length += md[0].length
         end
         consumed_length
+      end
+    end
+
+    def line_continuation_token
+      if @chunk.match(LINE_CONTINUATION)
+        raise(
+          LineContinuationFound,
+          "Expected more input, line continutation found"
+        )
       end
     end
 
