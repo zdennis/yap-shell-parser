@@ -1386,6 +1386,25 @@ describe Yap::Shell::Parser::Lexer do
           described_class.new.tokenize("echo hello \n world\\ word")
         end.to_not raise_error
       end
+
+      context 'newlines that follow line continuations inside a string are stripped' do
+        let(:str){ "echo foo\\\nbar" }
+        it { should eq [
+          t(:Command, "echo", lineno:0),
+          t(:Argument, "foobar", lineno:0)
+        ]}
+      end
+
+      context 'newlines that follow line continuations at the end of a string are not stripped' do
+        it 'raises an error when found at the end of a multiline string' do
+          expect do
+            described_class.new.tokenize("echo foo\\\nbar\\\n" )
+          end.to raise_error(
+            Yap::Shell::Parser::Lexer::LineContinuationFound,
+            %|Expected more input, line continutation found|
+          )
+        end
+      end
     end
   end
 end

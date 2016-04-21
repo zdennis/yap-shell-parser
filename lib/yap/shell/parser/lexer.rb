@@ -115,6 +115,7 @@ module Yap::Shell
       last_position = -1
       process_next_chunk = -> { @chunk = str.slice(@current_position..-1) ; @chunk != "" }
 
+      strip_line_continutations_before_newlines
       line_continuation_token
 
       while process_next_chunk.call
@@ -386,6 +387,10 @@ module Yap::Shell
           "Expected more input, line continutation found"
         )
       end
+    end
+
+    def strip_line_continutations_before_newlines
+      @chunk.gsub!(/\\\n/, '\\')
     end
 
     def terminator_token
