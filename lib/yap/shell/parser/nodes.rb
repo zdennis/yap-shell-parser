@@ -45,24 +45,6 @@ module Yap::Shell
       end
     end
 
-    class AssignmentNode
-      include Visitor
-
-      attr_reader :lvalue, :rvalue
-
-      def initialize(lvalue, rvalue)
-        @lvalue, @rvalue = lvalue, rvalue
-      end
-
-      def inspect
-        to_s
-      end
-
-      def to_s
-        "A(#{lvalue.inspect}=#{rvalue.inspect})"
-      end
-    end
-
     class CommandNode
       include Visitor
 
