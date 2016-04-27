@@ -61,6 +61,7 @@ describe Yap::Shell::Parser do
   it { is_expected.to parse "echo bar && > foo.txt" }
   it { is_expected.to parse "#this is a comment" }
   it { is_expected.to parse "echo foo #this last part is a comment" }
+  it { is_expected.to parse "git reset --hard @{u}" }
 
   it { is_expected.to fail_parsing "ls ()" }
 end

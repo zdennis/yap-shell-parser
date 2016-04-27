@@ -72,18 +72,25 @@ describe Yap::Shell::Parser::Lexer do
         end
 
         describe "ls {echo n }" do
-          it { should eq [
-            t(:Command, "ls", lineno:0),
-            t(:BlockBegin, '{', lineno: 0),
-            t(:Command, "echo", lineno:0),
-            t(:Argument, "n", lineno:0),
-            t(:BlockEnd, '}', lineno: 0)
-          ]}
+          it "parses as a block" do
+            should eq [
+              t(:Command, "ls", lineno:0),
+              t(:BlockBegin, '{', lineno: 0),
+              t(:Command, "echo", lineno:0),
+              t(:Argument, "n", lineno:0),
+              t(:BlockEnd, '}', lineno: 0)
+            ]
+          end
         end
 
         describe "ls s{ echo n}" do
-          it "fails to lex" do
-            expect { subject }.to raise_error
+          it "parses as arguments" do
+            should eq [
+              t(:Command, "ls", lineno:0),
+              t(:Argument, "s{", lineno:0),
+              t(:Argument, "echo", lineno:0),
+              t(:Argument, "n}", lineno:0)
+            ]
           end
         end
       end
@@ -562,6 +569,24 @@ describe Yap::Shell::Parser::Lexer do
           t(:Command, "alias", lineno:0),
           t(:Argument, "z=echo hi", lineno:0),
         ]}
+      end
+    end
+
+    context 'args with special characters' do
+      describe 'echo @{u}' do
+        it { should eq [
+          t(:Command, "echo", lineno:0),
+          t(:Argument, "@{u}", lineno:0)
+        ]}
+      end
+
+      describe 'echo @\(u\)' do
+        it "parentheses must be escaped to be treated as arguments" do
+          should eq [
+            t(:Command, "echo", lineno:0),
+            t(:Argument, "@(u)", lineno:0)
+          ]
+        end
       end
     end
   end

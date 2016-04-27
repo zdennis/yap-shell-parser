@@ -340,7 +340,7 @@ module Yap::Shell
           elsif ch == '\\'
             # no-op
             characters_read += 1
-          elsif prev_char != '\\' && ch =~ /[\s\|;&\)\}]/
+          elsif prev_char != '\\' && ch =~ /[\s\|;&\(\)]/
             break
           else
             str << ch
