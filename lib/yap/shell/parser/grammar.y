@@ -29,18 +29,18 @@ stmts : stmts Separator stmt
   | range_stmt
 
 stmt : stmt Conditional pipeline
-    { result = ConditionalNode.new(val[1].value, val[0], val[2]) }
+    { result = ConditionalNode.new(val[1], val[0], val[2]) }
   | pipeline
   | block_stmt
 
 block_stmt : range_stmt BlockBegin stmts BlockEnd
     { result = val[0].tap { |range_node| range_node.tail = BlockNode.new(nil, val[2]) } }
   | range_stmt BlockBegin BlockParams stmts BlockEnd
-    { result = val[0].tap { |range_node| range_node.tail = BlockNode.new(nil, val[3], params: val[2].value) } }
+    { result = val[0].tap { |range_node| range_node.tail = BlockNode.new(nil, val[3], params: val[2]) } }
   | stmt BlockBegin stmts BlockEnd
     { result = BlockNode.new(val[0], val[2]) }
   | stmt BlockBegin BlockParams stmts BlockEnd
-    { result = BlockNode.new(val[0], val[3], params: val[2].value) }
+    { result = BlockNode.new(val[0], val[3], params: val[2]) }
 
 range_stmt : Range
     { result = RangeNode.new(val[0]) }
@@ -74,10 +74,10 @@ command_w_heredoc : command_w_redirects Heredoc
     { val[0].heredoc = val[1] ; result = val[0] }
   | command_w_redirects
   | Redirection
-    { result = RedirectionNode.new(val[0].value, val[0].attrs[:target]) }
+    { result = RedirectionNode.new(val[0]) }
 
 command_w_redirects : command_w_redirects Redirection
-    { val[0].redirects << RedirectionNode.new(val[1].value, val[1].attrs[:target]) ; result = val[0] }
+    { val[0].redirects << RedirectionNode.new(val[1]) ; result = val[0] }
   | command_w_vars
   | command
   | vars
@@ -93,13 +93,13 @@ vars : vars LValue RValue
 command : command2
 
 command2: Command
-    { result = CommandNode.new(val[0].value) }
+    { result = CommandNode.new(val[0]) }
   | Command args
-    { result = CommandNode.new(val[0].value, val[1].flatten) }
+    { result = CommandNode.new(val[0], val[1].flatten) }
   | LiteralCommand
-    { result = CommandNode.new(val[0].value, literal:true) }
+    { result = CommandNode.new(val[0], literal:true) }
   | LiteralCommand args
-    { result = CommandNode.new(val[0].value, val[1].flatten, literal:true) }
+    { result = CommandNode.new(val[0], val[1].flatten, literal:true) }
 
 args : Argument
     { result = [ArgumentNode.new(val[0])] }
@@ -107,7 +107,7 @@ args : Argument
     { result = [val[0], ArgumentNode.new(val[1])].flatten }
 
 internal_eval : InternalEval
-    { result = InternalEvalNode.new(val[0].value) }
+    { result = InternalEvalNode.new(val[0]) }
 
 ---- header
 if $0 ==__FILE__

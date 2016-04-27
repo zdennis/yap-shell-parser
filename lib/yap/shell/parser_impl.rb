@@ -293,7 +293,7 @@ module_eval(<<'.,.,', 'grammar.y', 27)
 
 module_eval(<<'.,.,', 'grammar.y', 31)
   def _reduce_6(val, _values, result)
-     result = ConditionalNode.new(val[1].value, val[0], val[2]) 
+     result = ConditionalNode.new(val[1], val[0], val[2]) 
     result
   end
 .,.,
@@ -311,7 +311,7 @@ module_eval(<<'.,.,', 'grammar.y', 36)
 
 module_eval(<<'.,.,', 'grammar.y', 38)
   def _reduce_10(val, _values, result)
-     result = val[0].tap { |range_node| range_node.tail = BlockNode.new(nil, val[3], params: val[2].value) } 
+     result = val[0].tap { |range_node| range_node.tail = BlockNode.new(nil, val[3], params: val[2]) } 
     result
   end
 .,.,
@@ -325,7 +325,7 @@ module_eval(<<'.,.,', 'grammar.y', 40)
 
 module_eval(<<'.,.,', 'grammar.y', 42)
   def _reduce_12(val, _values, result)
-     result = BlockNode.new(val[0], val[3], params: val[2].value) 
+     result = BlockNode.new(val[0], val[3], params: val[2]) 
     result
   end
 .,.,
@@ -409,14 +409,14 @@ module_eval(<<'.,.,', 'grammar.y', 73)
 
 module_eval(<<'.,.,', 'grammar.y', 76)
   def _reduce_29(val, _values, result)
-     result = RedirectionNode.new(val[0].value, val[0].attrs[:target]) 
+     result = RedirectionNode.new(val[0]) 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'grammar.y', 79)
   def _reduce_30(val, _values, result)
-     val[0].redirects << RedirectionNode.new(val[1].value, val[1].attrs[:target]) ; result = val[0] 
+     val[0].redirects << RedirectionNode.new(val[1]) ; result = val[0] 
     result
   end
 .,.,
@@ -452,28 +452,28 @@ module_eval(<<'.,.,', 'grammar.y', 90)
 
 module_eval(<<'.,.,', 'grammar.y', 95)
   def _reduce_38(val, _values, result)
-     result = CommandNode.new(val[0].value) 
+     result = CommandNode.new(val[0]) 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'grammar.y', 97)
   def _reduce_39(val, _values, result)
-     result = CommandNode.new(val[0].value, val[1].flatten) 
+     result = CommandNode.new(val[0], val[1].flatten) 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'grammar.y', 99)
   def _reduce_40(val, _values, result)
-     result = CommandNode.new(val[0].value, literal:true) 
+     result = CommandNode.new(val[0], literal:true) 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'grammar.y', 101)
   def _reduce_41(val, _values, result)
-     result = CommandNode.new(val[0].value, val[1].flatten, literal:true) 
+     result = CommandNode.new(val[0], val[1].flatten, literal:true) 
     result
   end
 .,.,
@@ -494,7 +494,7 @@ module_eval(<<'.,.,', 'grammar.y', 106)
 
 module_eval(<<'.,.,', 'grammar.y', 109)
   def _reduce_44(val, _values, result)
-     result = InternalEvalNode.new(val[0].value) 
+     result = InternalEvalNode.new(val[0]) 
     result
   end
 .,.,

@@ -51,8 +51,8 @@ module Yap::Shell
       attr_reader :command, :args
       attr_accessor :heredoc, :redirects
 
-      def initialize(command, *args, literal:false, heredoc:nil)
-        @command = command
+      def initialize(token, *args, literal:false, heredoc:nil)
+        @command = token.value
         @args = args.flatten
         @literal = literal
         @heredoc = nil
@@ -160,8 +160,8 @@ module Yap::Shell
 
       attr_reader :operator, :expr1, :expr2
 
-      def initialize(operator, expr1, expr2)
-        @operator = operator
+      def initialize(token, expr1, expr2)
+        @operator = token.value
         @expr1    = expr1
         @expr2    = expr2
       end
@@ -177,8 +177,8 @@ module Yap::Shell
       attr_reader :src
       alias_method :command, :src
 
-      def initialize(src)
-        @src = src
+      def initialize(token)
+        @src = token.value
       end
 
       def args
@@ -226,9 +226,9 @@ module Yap::Shell
 
       attr_reader :kind, :target
 
-      def initialize(kind, target)
-        @kind = kind
-        @target = target
+      def initialize(token)
+        @kind = token.value
+        @target = token.attrs[:target]
       end
 
       def to_s(indent:0)
@@ -284,10 +284,10 @@ module Yap::Shell
 
       attr_accessor :head, :tail, :params
 
-      def initialize(head, tail, params: [])
+      def initialize(head, tail, params: nil)
         @head = head
         @tail = tail
-        @params = params
+        @params = params ? params.value : []
       end
 
       def to_s(indent:0)
