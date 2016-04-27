@@ -475,7 +475,7 @@ describe Yap::Shell::Parser::Lexer do
         let(:str){ "ls 'hello there'" }
         it { should eq [
           t(:Command, "ls", lineno:0),
-          t(:Argument, "hello there", lineno:0)
+          t(:Argument, "hello there", lineno:0, attrs: { quoted_by: "'" })
         ]}
       end
 
@@ -483,7 +483,7 @@ describe Yap::Shell::Parser::Lexer do
         let(:str){ "ls 'hello \\'there\\''" }
         it { should eq [
           t(:Command, "ls", lineno:0),
-          t(:Argument, "hello 'there'", lineno:0)
+          t(:Argument, "hello 'there'", lineno:0, attrs: { quoted_by: "'" })
         ]}
       end
 
@@ -491,7 +491,7 @@ describe Yap::Shell::Parser::Lexer do
         let(:str){ %|ls 'hello "there"'| }
         it { should eq [
           t(:Command, "ls", lineno:0),
-          t(:Argument, 'hello "there"', lineno:0)
+          t(:Argument, 'hello "there"', lineno:0, attrs: { quoted_by: "'" })
         ]}
       end
 
@@ -499,7 +499,7 @@ describe Yap::Shell::Parser::Lexer do
         let(:str){ "ls 'hello \\'there \\\\'guy\\\\' \\''" }
         it { should eq [
           t(:Command, "ls", lineno:0),
-          t(:Argument, "hello 'there \\'guy\\' '", lineno:0)
+          t(:Argument, "hello 'there \\'guy\\' '", lineno:0, attrs: { quoted_by: "'" })
         ]}
       end
 
@@ -507,8 +507,8 @@ describe Yap::Shell::Parser::Lexer do
         let(:str){ "ls 'hello \\'there\\'' 'how are \\'you\\'?'" }
         it { should eq [
           t(:Command, "ls", lineno:0),
-          t(:Argument, "hello 'there'", lineno:0),
-          t(:Argument, "how are 'you'?", lineno:0)
+          t(:Argument, "hello 'there'", lineno:0, attrs: { quoted_by: "'" }),
+          t(:Argument, "how are 'you'?", lineno:0, attrs: { quoted_by: "'" })
         ]}
       end
 
@@ -516,7 +516,7 @@ describe Yap::Shell::Parser::Lexer do
         let(:str){ "alias z='echo hi'" }
         it { should eq [
           t(:Command, "alias", lineno:0),
-          t(:Argument, "z=echo hi", lineno:0),
+          t(:Argument, "z=echo hi", lineno:0, attrs: { quoted_by: "'" }),
         ]}
       end
     end
@@ -526,7 +526,7 @@ describe Yap::Shell::Parser::Lexer do
         let(:str){ 'ls "hello there"' }
         it { should eq [
           t(:Command, 'ls', lineno:0),
-          t(:Argument, 'hello there', lineno:0)
+          t(:Argument, 'hello there', lineno:0, attrs: { quoted_by: '"' })
         ]}
       end
 
@@ -534,7 +534,7 @@ describe Yap::Shell::Parser::Lexer do
         let(:str){ %|ls "hello 'there'"| }
         it { should eq [
           t(:Command, 'ls', lineno:0),
-          t(:Argument, "hello 'there'", lineno:0)
+          t(:Argument, "hello 'there'", lineno:0, attrs: { quoted_by: '"' })
         ]}
       end
 
@@ -542,7 +542,7 @@ describe Yap::Shell::Parser::Lexer do
         let(:str){ 'ls "hello \\"there\\""' }
         it { should eq [
           t(:Command, 'ls', lineno:0),
-          t(:Argument, 'hello "there"', lineno:0)
+          t(:Argument, 'hello "there"', lineno:0, attrs: { quoted_by: '"' })
         ]}
       end
 
@@ -550,7 +550,7 @@ describe Yap::Shell::Parser::Lexer do
         let(:str){ 'ls "hello \\"there \\\\"guy\\\\" \\""' }
         it { should eq [
           t(:Command, 'ls', lineno:0),
-          t(:Argument, 'hello "there \\"guy\\" "', lineno:0)
+          t(:Argument, 'hello "there \\"guy\\" "', lineno:0, attrs: { quoted_by: '"' })
         ]}
       end
 
@@ -558,8 +558,8 @@ describe Yap::Shell::Parser::Lexer do
         let(:str){ 'ls "hello \\"there\\"" "how are \\"you\\"?"' }
         it { should eq [
           t(:Command, 'ls', lineno:0),
-          t(:Argument, 'hello "there"', lineno:0),
-          t(:Argument, 'how are "you"?', lineno:0)
+          t(:Argument, 'hello "there"', lineno:0, attrs: { quoted_by: '"' }),
+          t(:Argument, 'how are "you"?', lineno:0, attrs: { quoted_by: '"' })
         ]}
       end
 
@@ -567,7 +567,7 @@ describe Yap::Shell::Parser::Lexer do
         let(:str){ "alias z=\"echo hi\"" }
         it { should eq [
           t(:Command, "alias", lineno:0),
-          t(:Argument, "z=echo hi", lineno:0),
+          t(:Argument, "z=echo hi", lineno:0, attrs: { quoted_by: '"' })
         ]}
       end
     end
@@ -1088,7 +1088,7 @@ describe Yap::Shell::Parser::Lexer do
         t(:LValue, "FOO", lineno: 0),
         t(:RValue, "abc", lineno: 0),
         t(:LValue, "BAR", lineno: 0),
-        t(:RValue, "hello world", lineno: 0),
+        t(:RValue, "hello world", lineno: 0, attrs: { quoted_by: "'"}),
         t(:Command, "ls", lineno: 0),
         t(:Argument, "-l", lineno: 0)
       ]}

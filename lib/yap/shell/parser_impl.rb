@@ -436,14 +436,14 @@ module_eval(<<'.,.,', 'grammar.y', 85)
 
 module_eval(<<'.,.,', 'grammar.y', 88)
   def _reduce_35(val, _values, result)
-     val[0].add_var(val[1].value, val[2].value) ; result = val[0] 
+     val[0].add_var(val[1], ArgumentNode.new(val[2])) ; result = val[0] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'grammar.y', 90)
   def _reduce_36(val, _values, result)
-     result = EnvNode.new(val[0].value, val[1].value) 
+     result = EnvNode.new(val[0], ArgumentNode.new(val[1])) 
     result
   end
 .,.,
@@ -480,14 +480,14 @@ module_eval(<<'.,.,', 'grammar.y', 101)
 
 module_eval(<<'.,.,', 'grammar.y', 104)
   def _reduce_42(val, _values, result)
-     result = [ArgumentNode.new(val[0].value)] 
+     result = [ArgumentNode.new(val[0])] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'grammar.y', 106)
   def _reduce_43(val, _values, result)
-     result = [val[0], ArgumentNode.new(val[1].value)].flatten 
+     result = [val[0], ArgumentNode.new(val[1])].flatten 
     result
   end
 .,.,

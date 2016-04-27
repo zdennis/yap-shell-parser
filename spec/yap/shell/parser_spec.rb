@@ -64,4 +64,5 @@ describe Yap::Shell::Parser do
   it { is_expected.to parse "git reset --hard @{u}" }
 
   it { is_expected.to fail_parsing "ls ()" }
+  it { is_expected.to parse("echo 'hi'")}
 end

@@ -334,6 +334,7 @@ module Yap::Shell
           ch = @chunk[characters_read]
 
           if %w(' ").include?(ch)
+            @quoted_by = ch
             result = process_string @chunk[characters_read..-1], ch
             str << result.str
             characters_read += result.consumed_length
@@ -353,7 +354,11 @@ module Yap::Shell
         end
 
         if characters_read > 0
-          token :Argument, str
+          attrs = {}
+          if @quoted_by
+            attrs.merge!(quoted_by: @quoted_by)
+          end
+          token :Argument, str, attrs: attrs
           characters_read
         else
           nil
@@ -370,7 +375,7 @@ module Yap::Shell
         @chunk = @chunk[i..-1]
         if %w(' ").include?(@chunk[0])
           result = process_string @chunk[0..-1], @chunk[0]
-          token :RValue, result.str
+          token :RValue, result.str, attrs: { quoted_by: @chunk[0] }
           consumed_length += result.consumed_length
         elsif md=@chunk.match(RH_VALUE)
           token :RValue, md[1]
@@ -414,7 +419,7 @@ module Yap::Shell
       if %w(' ").include?(@chunk[0])
         result = process_string @chunk[0..-1], @chunk[0]
         if @looking_for_args
-          token :Argument, result.str
+          token :Argument, result.str, attrs: { quoted_by: @chunk[0] }
         else
           token :Command, result.str
         end

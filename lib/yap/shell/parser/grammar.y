@@ -86,9 +86,9 @@ command_w_vars : vars command
   { result = EnvWrapperNode.new(val[0], val[1]) }
 
 vars : vars LValue RValue
-    { val[0].add_var(val[1].value, val[2].value) ; result = val[0] }
+    { val[0].add_var(val[1], ArgumentNode.new(val[2])) ; result = val[0] }
   | LValue RValue
-    { result = EnvNode.new(val[0].value, val[1].value) }
+    { result = EnvNode.new(val[0], ArgumentNode.new(val[1])) }
 
 command : command2
 
@@ -102,9 +102,9 @@ command2: Command
     { result = CommandNode.new(val[0].value, val[1].flatten, literal:true) }
 
 args : Argument
-    { result = [ArgumentNode.new(val[0].value)] }
+    { result = [ArgumentNode.new(val[0])] }
   | args Argument
-    { result = [val[0], ArgumentNode.new(val[1].value)].flatten }
+    { result = [val[0], ArgumentNode.new(val[1])].flatten }
 
 internal_eval : InternalEval
     { result = InternalEvalNode.new(val[0].value) }

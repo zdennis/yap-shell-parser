@@ -19,8 +19,21 @@ module Yap::Shell
 
       attr_reader :lvalue
 
-      def initialize(lvalue)
-        @lvalue = lvalue
+      def initialize(token)
+        @lvalue = token.value
+        @attrs = token.attrs
+      end
+
+      def quoted?
+        double_quoted? || single_quoted?
+      end
+
+      def double_quoted?
+        @attrs[:quoted_by] == '"'
+      end
+
+      def single_quoted?
+        @attrs[:quoted_by] == "'"
       end
 
       def inspect
@@ -108,13 +121,13 @@ module Yap::Shell
 
       attr_reader :env
 
-      def initialize(lvalue, rvalue)
+      def initialize(token, argument_node)
         @env = {}
-        @env[lvalue] = rvalue
+        @env[token.value] = argument_node
       end
 
-      def add_var(lvalue, rvalue)
-        @env[lvalue] = rvalue
+      def add_var(token, argument_node)
+        @env[token.value] = argument_node
       end
     end
 
