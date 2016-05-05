@@ -132,8 +132,10 @@ module Yap::Shell
       include Visitor
 
       attr_reader :head, :tail
+      attr_accessor :redirects
 
       def initialize(head, tail=nil)
+        @redirects = []
         if head.is_a?(StatementsNode) && head.tail.nil?
           @head = head.head
         else
@@ -146,7 +148,8 @@ module Yap::Shell
         <<-EOT.gsub(/^\s+\|/, '')
           |  #{' ' * indent}StatementsNode(
           |  #{' ' * indent}  #{@head.to_s},
-          |  #{' ' * indent}  #{@tail.to_s})
+          |  #{' ' * indent}  #{@tail.to_s},
+          |  #{' ' * indent}  redirects: #{redirects})
         EOT
       end
 
