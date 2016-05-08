@@ -5,15 +5,27 @@ module Yap
     module Parser
       class ParseError < ::StandardError ; end
 
-      def self.parse(input)
-        Yap::Shell::ParserImpl.new.parse(input)
-      rescue Racc::ParseError => ex
-        raise ParseError, "Message: #{ex.message}\nInput: #{input}"
+      class << self
+        def parse(input)
+          debug_log "#parse entry with: #{input.inspect}"
+          Yap::Shell::ParserImpl.new.parse(input).tap do |results|
+            debug_log "#parse exit returning: #{results.inspect}"
+          end
+        rescue Racc::ParseError => ex
+          raise ParseError, "Message: #{ex.message}\nInput: #{input}"
+        end
+
+        def each_command_substitution_for(input, &blk)
+          Yap::Shell::Parser::Lexer.new.each_command_substitution_for(input, &blk)
+        end
+
+        private
+
+        def debug_log(message)
+          Treefell['parser'].puts message
+        end
       end
 
-      def self.each_command_substitution_for(input, &blk)
-        Yap::Shell::Parser::Lexer.new.each_command_substitution_for(input, &blk)
-      end
     end
   end
 end
