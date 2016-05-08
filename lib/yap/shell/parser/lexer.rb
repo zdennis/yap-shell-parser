@@ -103,6 +103,7 @@ module Yap::Shell
     end
 
     def tokenize(str)
+      debug_log "##{__callee__} string: #{str.inspect}"
       @chunk = str
       @tokens = []
       @lineno = 0
@@ -119,6 +120,7 @@ module Yap::Shell
       line_continuation_token
 
       while process_next_chunk.call
+        debug_log "##{__callee__} looking for next token in: #{@chunk.inspect}"
         result =
           comment_token ||
           block_token ||
@@ -156,7 +158,9 @@ module Yap::Shell
     private
 
     def token(tag, value, attrs:{})
-      @tokens.push [tag, Token.new(tag, value, lineno:@lineno, attrs:attrs)]
+      token = [tag, Token.new(tag, value, lineno:@lineno, attrs:attrs)]
+      debug_log "#{__callee__} found token: #{token.inspect}"
+      @tokens.push token
     end
 
     def block_token
@@ -172,6 +176,8 @@ module Yap::Shell
         @looking_for_args = false
         token :BlockEnd, md[1]
         md[0].length
+      else
+        did_not_match
       end
     end
 
@@ -179,11 +185,16 @@ module Yap::Shell
       if md=@chunk.match(COMMENT)
         token :Comment, md[0]
         md[0].length
+      else
+        did_not_match
       end
     end
 
     def numerical_range_token
-      return if @looking_for_args
+      if @looking_for_args
+        skipping
+        return
+      end
 
       if md=@chunk.match(NUMERIC_RANGE_W_CALL)
         start, stop = md[2].to_i, md[3].to_i
@@ -227,31 +238,47 @@ module Yap::Shell
         token :Range, (start..stop)
         md[0].length
 
+      else
+        did_not_match
       end
-
     end
 
     def command_token
-      if !@looking_for_args && md=@chunk.match(COMMAND)
+      if @looking_for_args
+        skipping
+        return
+      elsif md=@chunk.match(COMMAND)
         @looking_for_args = true
         token :Command, md[1]
         md[0].length
+      else
+        did_not_match
       end
     end
 
     def literal_command_token
-      if !@looking_for_args && md=@chunk.match(LITERAL_COMMAND)
+      if @looking_for_args
+        skipping
+        return
+      elsif md=@chunk.match(LITERAL_COMMAND)
         @looking_for_args = true
         token :LiteralCommand, md[1]
         md[0].length
+      else
+        did_not_match
       end
     end
 
     def numeric_expr_token
-      if !@looking_for_args && md=@chunk.match(NUMERIC_EXPR)
+      if @looking_for_args
+        skipping
+        return
+      elsif md=@chunk.match(NUMERIC_EXPR)
         @looking_for_args = true
         token :NumericExpr, md[1]
         md[0].length
+      else
+        did_not_match
       end
     end
 
@@ -281,6 +308,8 @@ module Yap::Shell
 
         token :Heredoc, contents
         consumed_length
+      else
+        did_not_match
       end
     end
 
@@ -296,6 +325,8 @@ module Yap::Shell
         result = process_internal_eval substr, consumed: consumed
         token :InternalEval, result.str
         return result.consumed_length
+      else
+        did_not_match
       end
     end
 
@@ -308,6 +339,8 @@ module Yap::Shell
       elsif md=@chunk.match(REDIRECTION2)
         token :Redirection, md[2], attrs: { target: md[3] }
         md[0].length
+      else
+        did_not_match
       end
     end
 
@@ -315,14 +348,19 @@ module Yap::Shell
       if md=@chunk.match(SUBGROUP)
         token md[0], md[0]
         return md[0].length
+      else
+        did_not_match
       end
     end
 
     # Matches and consumes non-meaningful whitespace.
     def whitespace_token
-      return nil unless md=WHITESPACE.match(@chunk)
-      input = md.to_a[0]
-      input.length
+      if md=WHITESPACE.match(@chunk)
+        input = md.to_a[0]
+        input.length
+      else
+        did_not_match
+      end
     end
 
     def argument_token
@@ -361,13 +399,18 @@ module Yap::Shell
           token :Argument, str, attrs: attrs
           characters_read
         else
-          nil
+          did_not_match
         end
+      else
+        skipping
       end
     end
 
     def assignment_token
-      if !@looking_for_args && md=@chunk.match(LH_ASSIGNMENT)
+      if @looking_for_args
+        skipping
+        return
+      elsif md=@chunk.match(LH_ASSIGNMENT)
         token :LValue, md[2]
         consumed_length = md[1].length
         i = consumed_length
@@ -382,6 +425,8 @@ module Yap::Shell
           consumed_length += md[0].length
         end
         consumed_length
+      else
+        did_not_match
       end
     end
 
@@ -391,6 +436,8 @@ module Yap::Shell
           LineContinuationFound,
           "Expected more input, line continutation found"
         )
+      else
+        did_not_match
       end
     end
 
@@ -411,6 +458,8 @@ module Yap::Shell
         @looking_for_args = false
         token :Pipe, md[0]
         md[0].length
+      else
+        did_not_match
       end
     end
 
@@ -423,7 +472,9 @@ module Yap::Shell
         else
           token :Command, result.str
         end
-        return result.consumed_length
+        result.consumed_length
+      else
+        did_not_match
       end
     end
 
@@ -446,7 +497,9 @@ module Yap::Shell
           token :EndCommandSubstitution, delimiter
         end
 
-        return consumed_length_so_far + append_result.consumed_length
+        consumed_length_so_far + append_result.consumed_length
+      else
+        did_not_match
       end
     end
 
@@ -512,37 +565,57 @@ module Yap::Shell
       i = delimiter.length  # start string matching after our delimiter
       result_str = ''
 
+      if indent == 0
+        debug_log "##{__callee__} input_str=#{input_str.inspect} delimiter=#{delimiter.inspect} start_position=#{i}"
+        indent += 1
+      else
+        debug_log "#{' ' * indent}##{__callee__} input_str=#{input_str.inspect} delimiter=#{delimiter.inspect} start_position=#{i}"
+        indent += 1
+      end
+      indent_str = ' ' * indent
+
       loop do
         chunk = input_str[i..-1]
 
-        puts "#{' '*indent}I: #{i}" if ENV["DEBUG"]
-
         if i >= input_str.length
-          puts "#{' '*indent}C-yah: result:#{result_str.inspect}  length: #{input_str.length}"  if ENV["DEBUG"]
+          debug_log "#{indent_str}found unterminated string, raising error"
           raise NonterminatedString, "Expected to find #{delimiter} in:\n  #{input_str}"
-          return OpenStruct.new(str:result_str, consumed_length: input_str.length)
         end
 
         if chunk.start_with?(nested_delimiter) # we found a nested escaped string
-          puts "#{' '*indent}A-pre: chunk:#{chunk.inspect}  nested_delimiter:#{nested_delimiter.inspect}" if ENV["DEBUG"]
+          debug_log "#{indent_str}nested string found in #{chunk.inspect}"
           result = process_string(chunk[0..-1], nested_delimiter, indent+2)
           result_str << [delimiter, result.str, delimiter].join
-          puts "#{' '*indent}A-pos: result:#{result.inspect}  result_str:#{result_str.inspect}  #{nested_delimiter.length} + #{result.consumed_length} + #{nested_delimiter.length}" if ENV["DEBUG"]
-
+          debug_log "#{indent_str}nested string found was #{result.inspect}"
           i += result.consumed_length
 
         elsif chunk.start_with?(delimiter)    # we found the end of our current nested escaped string
-          puts "#{' '*indent}B-yah: result:#{result_str.inspect}  length: #{i}" if ENV["DEBUG"]
+          debug_log "#{indent_str}found the end of the string making string: #{result_str.inspect}"
           return OpenStruct.new(str:result_str, consumed_length: i+delimiter.length)
 
         else
           char = input_str[i]
           result_str << char
-          puts "#{' '*indent}D-yah: i:#{i}  char: #{char}   result_str:#{result_str.inspect}" if ENV["DEBUG"]
+          debug_log "#{indent_str}consuming character #{char} at position #{i}"
           i += 1
         end
       end
     end
 
+    def debug_log(message)
+      Treefell['lexer'].puts message
+    end
+
+    def did_not_match
+      calling_method = caller[0][/`.*'/][1..-2]
+      debug_log "##{calling_method} didn't match: #{@chunk.inspect}"
+      nil
+    end
+
+    def skipping
+      calling_method = caller[0][/`.*'/][1..-2]
+      debug_log "##{calling_method} is being skipped"
+      nil
+    end
   end
 end
