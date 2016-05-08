@@ -103,7 +103,7 @@ module Yap::Shell
     end
 
     def tokenize(str)
-      debug_log "##{__callee__} string: #{str.inspect}"
+      debug_log "##{__callee__} entered with: #{str.inspect}"
       @chunk = str
       @tokens = []
       @lineno = 0
@@ -152,6 +152,7 @@ module Yap::Shell
 
       token :BlankLine, str if @tokens.empty?
 
+      debug_log "##{__callee__} exit returning: #{@tokens.inspect}"
       @tokens
     end
 

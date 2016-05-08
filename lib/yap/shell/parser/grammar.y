@@ -129,7 +129,7 @@ end
     @yydebug = true
 
     @q = Yap::Shell::Parser::Lexer.new.tokenize(str)
-    pp @q if ENV["DEBUG"]
+
     # @q.push [false, '$']   # is optional from Racc 1.3.7
 # puts @q.inspect
 # puts "---- parse tree follows ----"
