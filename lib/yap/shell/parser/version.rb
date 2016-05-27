@@ -3,7 +3,7 @@ require 'yap/shell/parser'
 module Yap
   module Shell
     module Parser
-      VERSION = "0.6.1"
+      VERSION = "0.6.2"
     end
   end
 end
