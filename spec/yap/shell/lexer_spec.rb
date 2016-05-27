@@ -97,31 +97,31 @@ describe Yap::Shell::Parser::Lexer do
     end
 
     describe "can take block params" do
-      describe "ls { |a| this_is_a_block }" do
+      describe "ls { |param1| this_is_a_block }" do
         it { should eq [
           t(:Command, "ls", lineno:0),
           t(:BlockBegin, '{', lineno: 0),
-          t(:BlockParams, ['a'], lineno: 0),
+          t(:BlockParams, ['param1'], lineno: 0),
           t(:Command, "this_is_a_block", lineno:0),
           t(:BlockEnd, '}', lineno: 0)
         ]}
       end
 
-      describe "ls { |a,b| this_is_a_block }" do
+      describe "ls { |param1,b| this_is_a_block }" do
         it { should eq [
           t(:Command, "ls", lineno:0),
           t(:BlockBegin, '{', lineno: 0),
-          t(:BlockParams, ['a', 'b'], lineno: 0),
+          t(:BlockParams, ['param1', 'b'], lineno: 0),
           t(:Command, "this_is_a_block", lineno:0),
           t(:BlockEnd, '}', lineno: 0)
         ]}
       end
 
-      describe "ls { |a,  b,  c| this_is_a_block }" do
+      describe "ls { |a1,  b2,  c3| this_is_a_block }" do
         it { should eq [
           t(:Command, "ls", lineno:0),
           t(:BlockBegin, '{', lineno: 0),
-          t(:BlockParams, ['a', 'b', 'c'], lineno: 0),
+          t(:BlockParams, ['a1', 'b2', 'c3'], lineno: 0),
           t(:Command, "this_is_a_block", lineno:0),
           t(:BlockEnd, '}', lineno: 0)
         ]}

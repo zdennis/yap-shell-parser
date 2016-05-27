@@ -67,7 +67,7 @@ module Yap::Shell
 
     LINE_CONTINUATION = /.*\\\Z/
 
-    SPLIT_BLOCK_PARAMS_RGX = /\s*,\s*|\s*/
+    SPLIT_BLOCK_PARAMS_RGX = /\s*,\s*/
 
     # Loop over the given input and yield command substitutions. This yields
     # an object that responds to #str, and #position.
@@ -168,10 +168,7 @@ module Yap::Shell
       if md=@chunk.match(BLOCK_BEGIN)
         @looking_for_args = false
         token :BlockBegin, md[1]
-        if md[2]
-          params = md[2].split(SPLIT_BLOCK_PARAMS_RGX)
-          token :BlockParams, params
-        end
+        block_params_token(md[2])
         md[0].length
       elsif md=@chunk.match(BLOCK_END)
         @looking_for_args = false
@@ -179,6 +176,13 @@ module Yap::Shell
         md[0].length
       else
         did_not_match
+      end
+    end
+
+    def block_params_token(string)
+      if string
+        params = string.split(SPLIT_BLOCK_PARAMS_RGX).map(&:strip)
+        token :BlockParams, params
       end
     end
 
@@ -208,8 +212,7 @@ module Yap::Shell
         start, stop = md[2].to_i, md[3].to_i
         token :Range, (start..stop)
         token :BlockBegin, '{'
-        params = md[4].split(SPLIT_BLOCK_PARAMS_RGX)
-        token :BlockParams, params
+        block_params_token(md[4])
         @tokens_to_add_when_done << [:BlockEnd, '}']
         md[0].length
 
@@ -224,8 +227,7 @@ module Yap::Shell
         start, stop = 1, md[2].to_i
         token :Range, (start..stop)
         token :BlockBegin, '{'
-        params = md[4].split(SPLIT_BLOCK_PARAMS_RGX)
-        token :BlockParams, params
+        block_params_token(md[4])
         @tokens_to_add_when_done << [:BlockEnd, '}']
         md[0].length
 
