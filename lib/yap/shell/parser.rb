@@ -31,7 +31,11 @@ module Yap
 end
 
 $LOAD_PATH.unshift File.dirname(__FILE__) + "/../../"
-require 'treefell'
+begin
+  require 'treefell'
+rescue LoadError => ex
+  nil
+end
 require 'yap/shell/parser/lexer'
 require 'yap/shell/parser/nodes'
 require 'yap/shell/parser_impl'
