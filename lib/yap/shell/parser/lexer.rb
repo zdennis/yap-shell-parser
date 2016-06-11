@@ -371,16 +371,23 @@ module Yap::Shell
         str = ''
         characters_read = 0
         prev_char = ''
+
+        escaped = false
+        quoted_by = nil
+
         loop do
           ch = @chunk[characters_read]
 
           if %w(' ").include?(ch)
-            @quoted_by = ch
+            quoted_by = ch
             result = process_string @chunk[characters_read..-1], ch
             str << result.str
             characters_read += result.consumed_length
           elsif ch == '\\'
-            # no-op
+            # We're escaping the argument if this is the first character we
+            # see. If this comes any later then we don't care
+            escaped = true if characters_read == 0
+
             characters_read += 1
           elsif prev_char != '\\' && ch =~ /[\s\|;&\(\)]/
             break
@@ -396,9 +403,8 @@ module Yap::Shell
 
         if characters_read > 0
           attrs = {}
-          if @quoted_by
-            attrs.merge!(quoted_by: @quoted_by)
-          end
+          attrs.merge!(escaped: escaped) if escaped
+          attrs.merge!(quoted_by: quoted_by) if quoted_by
           token :Argument, str, attrs: attrs
           characters_read
         else

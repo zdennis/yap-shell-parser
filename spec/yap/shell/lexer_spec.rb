@@ -589,6 +589,16 @@ describe Yap::Shell::Parser::Lexer do
         end
       end
     end
+
+    context 'escaped arguments' do
+      describe 'echo \$FOO' do
+        it { should eq [
+          t(:Command, "echo", lineno:0),
+          t(:Argument, "$FOO", lineno:0, attrs: { escaped: true })
+        ]}
+      end
+
+    end
   end
 
   context "statements" do

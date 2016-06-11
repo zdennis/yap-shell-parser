@@ -67,4 +67,5 @@ describe Yap::Shell::Parser do
   it { is_expected.to parse("echo 'hi'")}
   it { is_expected.to parse("ls > foo.txt")}
   it { is_expected.to parse("ls * { |file1, file2, file3| echo $file1 $file2 $file3 }")}
+  it { is_expected.to parse('echo \\$DEBUG')}
 end

@@ -24,6 +24,10 @@ module Yap::Shell
         @attrs = token.attrs
       end
 
+      def escaped?
+        @attrs[:escaped]
+      end
+
       def quoted?
         double_quoted? || single_quoted?
       end
@@ -41,7 +45,7 @@ module Yap::Shell
       end
 
       def to_s
-        "ArgumentNode(#{lvalue.inspect})"
+        "ArgumentNode(#{lvalue.inspect} escaped? #{escaped?} double_quoted? #{double_quoted?} single_quoted? #{single_quoted?})"
       end
     end
 
