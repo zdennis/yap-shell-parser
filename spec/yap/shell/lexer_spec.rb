@@ -956,6 +956,14 @@ describe Yap::Shell::Parser::Lexer do
         ]}
       end
 
+      describe "can double up" do
+        let(:str){ "ls >> a.txt" }
+        it { should eq [
+          t(:Command, "ls", lineno: 0),
+          t(:Redirection, ">>", lineno: 0, attrs: { target: "a.txt" }),
+        ]}
+      end
+
       describe "can be the start of a command (for clearing files)" do
         describe "> a.txt" do
           it { should eq [
@@ -993,6 +1001,14 @@ describe Yap::Shell::Parser::Lexer do
         it { should eq [
           t(:Command, "foo", lineno: 0),
           t(:Redirection, "2>", lineno: 0, attrs: { target: "bar.txt" }),
+        ]}
+      end
+
+      describe "can double up" do
+        let(:str){ "ls 2>> a.txt" }
+        it { should eq [
+          t(:Command, "ls", lineno: 0),
+          t(:Redirection, "2>>", lineno: 0, attrs: { target: "a.txt" }),
         ]}
       end
     end

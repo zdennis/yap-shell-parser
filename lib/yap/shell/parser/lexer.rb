@@ -52,8 +52,9 @@ module Yap::Shell
     HEREDOC_START          = /\A<<-?([A-z0-9]+)\s*\n/
     INTERNAL_EVAL          = /\A(?:(\!)|([0-9]+))/
     SUBGROUP               = /\A(\(|\))/
-    REDIRECTION            = /\A(([12]?>&?[12]?)\s*(?![12]>)(#{ARG})?)/
-    REDIRECTION2           = /\A((&>|<)\s*(#{ARG}))/
+    REDIRECTION1           = /\A(([12]?>>)\s*(#{ARG}))/
+    REDIRECTION2            = /\A(([12]?>&?[12]?)\s*(?![12][\?]?>)(#{ARG})?)/
+    REDIRECTION3           = /\A((&>|<)\s*(#{ARG}))/
 
     NUMERIC_RANGE              = /\A\(((\d+)\.\.(\d+))\)(\.each)?/
     NUMERIC_RANGE_W_CALL       = /\A\(((\d+)\.\.(\d+))\)(\.each)?\s*:\s*/
@@ -334,14 +335,18 @@ module Yap::Shell
     end
 
     def redirection_token
-      if md=@chunk.match(REDIRECTION)
+      if md=@chunk.match(REDIRECTION1)
+        token :Redirection, md[2], attrs: { target: md[3] }
+        md[0].length
+      elsif md=@chunk.match(REDIRECTION2)
         target = nil
         target = md[3] if md[3] && md[3].length > 0
         token :Redirection, md[2], attrs: { target: target }
         md[0].length
-      elsif md=@chunk.match(REDIRECTION2)
+      elsif md=@chunk.match(REDIRECTION3)
         token :Redirection, md[2], attrs: { target: md[3] }
         md[0].length
+      elsif md=@chunk.match(REDIRECTION1)
       else
         did_not_match
       end
