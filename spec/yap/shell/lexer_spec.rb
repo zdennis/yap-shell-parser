@@ -1074,6 +1074,15 @@ describe Yap::Shell::Parser::Lexer do
           t(:Redirection, "1>", lineno: 0, attrs: { target: "hey.txt" })
         ]}
       end
+
+      describe "redirecting both stdout and stderr with an append: du -sh &>> hey.txt" do
+        let(:str){ "du -sh &>> hey.txt" }
+        it { should eq [
+          t(:Command, "du", lineno: 0),
+          t(:Argument, "-sh", lineno: 0),
+          t(:Redirection, "&>>", lineno: 0, attrs: { target: "hey.txt" })
+        ]}
+      end
     end
   end
 

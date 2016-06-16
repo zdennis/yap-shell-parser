@@ -54,7 +54,7 @@ module Yap::Shell
     SUBGROUP               = /\A(\(|\))/
     REDIRECTION1           = /\A(([12]?>>)\s*(#{ARG}))/
     REDIRECTION2            = /\A(([12]?>&?[12]?)\s*(?![12][\?]?>)(#{ARG})?)/
-    REDIRECTION3           = /\A((&>|<)\s*(#{ARG}))/
+    REDIRECTION3           = /\A((&>|<|&>>)\s*(#{ARG}))/
 
     NUMERIC_RANGE              = /\A\(((\d+)\.\.(\d+))\)(\.each)?/
     NUMERIC_RANGE_W_CALL       = /\A\(((\d+)\.\.(\d+))\)(\.each)?\s*:\s*/
