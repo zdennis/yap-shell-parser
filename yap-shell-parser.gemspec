@@ -19,8 +19,17 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
+  # Be specific about these dependencies otherwise RubyGems may print
+  # following warning:
+  #
+  #    WARN: Unresolved specs during Gem::Specification.reset
+  #
+  # This warning is caused by RubyGems having multiple versions of a gem
+  # installed that could match requirements.
+  spec.add_dependency "tins", "= 1.10.2"
+
   spec.add_dependency "treefell", "~> 0.3"
-  spec.add_dependency "term-ansicolor", "~> 1.3"
+  spec.add_dependency "term-ansicolor", "~> 1.3.2"
 
   spec.add_development_dependency "bundler", "~> 1.7"
   spec.add_development_dependency "rake", "~> 10.0"
